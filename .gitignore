@@ -1,0 +1,14 @@
+
+.DS_Store
+*.xml
+*.iml
+.idea/
+
+*.pyc
+__pycache__/
+.ipynb/
+.ipynb_checkpoints/
+
+venv/
+target/
+*.so
