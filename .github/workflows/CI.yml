@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  linux-wheels:
+  linux:
     runs-on: ubuntu-latest
     container: quay.io/pypa/manylinux1_x86_64
     steps:
@@ -29,8 +29,6 @@ jobs:
        with:
          name: linux-wheels
          path: ./io/dist
-
-
 
   windows:
     runs-on: windows-latest
