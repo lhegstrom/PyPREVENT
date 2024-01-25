@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: wheels
-          path: ./dist
+          path: ./io/dist
 
   windows:
     runs-on: windows-latest
@@ -169,31 +169,45 @@ jobs:
       - name: Install twine
         run: pip install twine
 
-      - name: Download wheels and sdist
+      - name: Download wheels
         uses: actions/download-artifact@v4
         with:
-          path: ./dist
-
+          name: wheels
+          path: ./dist/wheels
+      
+      - name: Download sdist
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: ./dist/sdist
+      
       - name: Publish to PyPI
-        run: twine upload ./dist/*
+        run: twine upload ./dist/wheels/* ./dist/sdist/*
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
 
 
   publish-to-github:
-    needs: [linux, windows, macos, sdist] # Update this based on your existing jobs
+    needs: [linux, windows, macos, sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-
-      - name: Download wheels and sdist
+  
+      - name: Download wheels
         uses: actions/download-artifact@v4
         with:
-          path: ./dist
-
+          name: wheels
+          path: ./dist/wheels
+  
+      - name: Download sdist
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: ./dist/sdist
+  
       - name: Get version from your version file
         id: version
         # Update the working-directory and command to extract version from your project's version file
@@ -201,7 +215,7 @@ jobs:
           # Example for extracting version from a Python file
           VERSION=$(python setup.py --version)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-
+  
       - name: Create GitHub release
         id: github-release
         uses: release-drafter/release-drafter@v5
@@ -214,14 +228,14 @@ jobs:
           disable-autolabeler: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+  
       - name: Upload assets to GitHub release
-        run: gh release upload $TAG $FILES --clobber
+        run: |
+          gh release upload $TAG ./dist/wheels/* ./dist/sdist/* --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.github-release.outputs.tag_name }}
-          FILES: ./dist/*
-
+  
       - name: Publish GitHub release
         run: gh release edit $TAG --draft=false
         env:
