@@ -175,7 +175,7 @@ jobs:
           path: ./dist
 
       - name: Publish to PyPI
-        run: twine upload dist/*
+        run: twine upload ./dist/*
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
@@ -207,7 +207,7 @@ jobs:
         uses: release-drafter/release-drafter@v5
         with:
           # Update these details according to your project
-          name: Your Project ${{ steps.version.outputs.version }}
+          name: PyPrevent ${{ steps.version.outputs.version }}
           tag: v${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}
           commitish: ${{ github.sha }}
@@ -220,7 +220,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.github-release.outputs.tag_name }}
-          FILES: dist/*
+          FILES: ./dist/*
 
       - name: Publish GitHub release
         run: gh release edit $TAG --draft=false
