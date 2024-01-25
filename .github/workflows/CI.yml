@@ -115,7 +115,7 @@ jobs:
           path: ./dist
 
 
-  release:
+   release:
     needs: [linux, windows, macos, sdist]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
@@ -155,3 +155,30 @@ jobs:
           asset_path: ./dist/sdist
           asset_name: ascvd_sdist.tar.gz
           asset_content_type: application/gzip
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install twine
+        run: pip install twine
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
+
+      - name: Publish distribution 📦 to PyPI
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
