@@ -121,7 +121,7 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
         with:
-          path: dist
+          path: ./dist
 
       - name: Create Release
         id: create_release
@@ -172,7 +172,7 @@ jobs:
       - name: Download wheels and sdist
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: ./dist
 
       - name: Publish to PyPI
         run: twine upload dist/*
@@ -192,7 +192,7 @@ jobs:
       - name: Download wheels and sdist
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: ./dist
 
       - name: Get version from your version file
         id: version
