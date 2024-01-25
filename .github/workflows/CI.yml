@@ -14,27 +14,23 @@ permissions:
   contents: read
 
 jobs:
-  linux:
+  linux-wheels:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
+    container: quay.io/pypa/manylinux1_x86_64
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Build wheels in Manylinux Docker Container
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/io ghcr.io/pyo3/maturin build --release --manifest-path /io/Cargo.toml -i python3.10 --out io/dist --manylinux off
-        env:
-          SCCACHE: 'true'
+     - uses: actions/checkout@v1
+     - name: Build wheels
+       run: |
+         curl https://sh.rustup.rs -sSf | sh -s -- -y
+         source $HOME/.cargo/env
+         rustup default nightly-2019-12-11
+         bash .github/workflows/build-wheels.sh
+     - uses: actions/upload-artifact@v1
+       with:
+         name: linux-wheels
+         path: ./io/dist
 
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: ./io/dist
+
 
   windows:
     runs-on: windows-latest
