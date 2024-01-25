@@ -38,7 +38,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
-          name: wheels
+          name: wheels-linux
           path: ./io/dist
 
   windows:
@@ -66,7 +66,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
-          name: wheels
+          name: wheels-windows
           path: ./dist
 
   macos:
@@ -93,7 +93,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
-          name: wheels
+          name: wheels-macos
           path: ./dist
 
   sdist:
@@ -169,20 +169,34 @@ jobs:
       - name: Install twine
         run: pip install twine
 
-      - name: Download wheels
+      # Download steps for each platform
+      - name: Download Linux wheels
         uses: actions/download-artifact@v4
         with:
-          name: wheels
-          path: ./dist/wheels
-      
+          name: wheels-linux
+          path: ./dist/wheels-linux
+  
+      - name: Download Windows wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-windows
+          path: ./dist/wheels-windows
+  
+      - name: Download macOS wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos
+          path: ./dist/wheels-macos
+  
       - name: Download sdist
         uses: actions/download-artifact@v4
         with:
           name: sdist
           path: ./dist/sdist
-      
+  
+      # Twine upload step
       - name: Publish to PyPI
-        run: twine upload ./dist/wheels/* ./dist/sdist/*
+        run: twine upload ./dist/wheels-linux/* ./dist/wheels-windows/* ./dist/wheels-macos/* ./dist/sdist/*
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
