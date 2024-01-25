@@ -3,13 +3,13 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "ascvd"
+name = "pyprevent"
 version = "0.1.0"
 authors = [{name = "Lars Hegstrom, MD", email = "lhegstrom@nference.net"}]
 
 [tool.maturin]
-module-name = "ascvd._ascvd"
+module-name = "pyprevent._pyprevent"
 compatibility = "linux"
 
 [tool.pytest.ini_options]
-testpaths = ["ascvd/tests"]
+testpaths = ["PyPrevent/tests"]

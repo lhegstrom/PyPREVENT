@@ -22,7 +22,7 @@ class CustomInstallCommand(install):
         wheel_name = next(
             w
             for w in os.listdir("../target/wheels")
-            if "ascvd" in w and w.endswith(".whl")
+            if "pyprevent" in w and w.endswith(".whl")
         )
         subprocess.check_call(["pip", "install", f"../target/wheels/{wheel_name}"])
 
@@ -36,7 +36,7 @@ class CustomInstallCommand(install):
 
 
 setup(
-    name="ascvd",
+    name="pyprevent",
     version="0.1.0",
     packages=find_packages(),
     cmdclass={
