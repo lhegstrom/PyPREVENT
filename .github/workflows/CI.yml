@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: wheels
-          path: ./dist
+          path: ./io/dist
 
   windows:
     runs-on: windows-latest
@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: wheels
-          path: ./io/dist
+          path: ./dist
 
   macos:
     runs-on: macos-latest
