@@ -113,9 +113,7 @@ jobs:
         with:
           name: sdist
           path: ./dist
-
-
-   release:
+  release:
     needs: [linux, windows, macos, sdist]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
