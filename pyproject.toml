@@ -4,8 +4,16 @@ build-backend = "maturin"
 
 [project]
 name = "pyprevent"
-version = "0.1.2"
-authors = [{name = "Lars Hegstrom_MD", email = "lhegstrom@nference.net"}]
+version = "0.1.1"
+authors = [{email = "lhegstrom@nference.net"}]
+description = "Python implementation of 2024 AHA PREVENT calculator"
+readme = "README.md"
+license = "License-Identifier"  # Specify your license
+repository = "https://github.com/lhegstrom/PyPrevent/"
+
+[project.urls]
+Source = "https://github.com/lhegstrom/PyPrevent/"
+Tracker = "https://github.com/lhegstrom/PyPrevent/issues"
 
 [tool.maturin]
 module-name = "pyprevent._pyprevent"
