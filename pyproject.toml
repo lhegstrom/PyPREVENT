@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "pyprevent"
 version = "0.1.2"
-authors = [{name = "Lars Hegstrom, MD", email = "lhegstrom@nference.net"}]
+authors = [{name = "Lars Hegstrom_MD", email = "lhegstrom@nference.net"}]
 
 [tool.maturin]
 module-name = "pyprevent._pyprevent"
