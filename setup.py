@@ -37,7 +37,7 @@ class CustomInstallCommand(install):
 
 setup(
     name="pyprevent",
-    version="0.1.0",
+    version="0.1.2",
     packages=find_packages(),
     cmdclass={
         "install": CustomInstallCommand,

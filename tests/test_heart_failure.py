@@ -1,6 +1,9 @@
 import slash
 import pyprevent
 import pandas as pd
+from hypothesis import given
+
+from .fixtures import TEST_PATIENT, generate_10_yr_test_case, generate_30_yr_test_case
 
 
 def test_calculate_10_yr_heart_failure_basic():
@@ -16,6 +19,32 @@ def test_calculate_10_yr_heart_failure_basic():
     )
     # Check if the result is as expected
     slash.assert_almost_equal(result, 13.1, delta=0.1)
+
+
+def test_calculate_10_yr_hf_risk_default_patient():
+    test_dict = {k: v for k, v in TEST_PATIENT.items() if not k.endswith("_expected")}
+    result = pyprevent.calculate_10_yr_heart_failure_risk(**test_dict)
+    expected_result = TEST_PATIENT["10_yr_hf_expected"]
+    slash.assert_almost_equal(result, expected_result, delta=0.1)
+
+
+def test_calculate_30_yr_hf_risk_default_patient():
+    test_dict = {k: v for k, v in TEST_PATIENT.items() if not k.endswith("_expected")}
+    result = pyprevent.calculate_30_yr_heart_failure_risk(**test_dict)
+    expected_result = TEST_PATIENT["30_yr_hf_expected"]
+    slash.assert_almost_equal(result, expected_result, delta=0.1)
+
+
+@given(generate_10_yr_test_case())
+def test_calculate_10_yr_hf_risk_with_hypothesis(test_case):
+    result = pyprevent.calculate_10_yr_heart_failure_risk(**test_case)
+    pass
+
+
+@given(generate_30_yr_test_case())
+def test_calculate_30_yr_hf_risk_with_hypothesis(test_case):
+    result = pyprevent.calculate_30_yr_heart_failure_risk(**test_case)
+    pass
 
 
 def test_invalid_age():

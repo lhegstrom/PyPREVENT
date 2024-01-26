@@ -9,11 +9,11 @@ def calculate_10_yr_heart_failure_risk(
     hdl_cholesterol: float,
     systolic_bp: float,
     has_diabetes: bool,
-    is_smoker: bool,
+    current_smoker: bool,
     bmi: float,
     egfr: float,
-    on_meds: bool,
-    cholesterol_treated: bool,
+    on_htn_meds: bool,
+    on_cholesterol_meds: bool,
 ) -> float:
     """
     Calculate the 10-year risk of developing heart failure (HF).
@@ -64,11 +64,11 @@ def calculate_10_yr_heart_failure_risk(
         hdl_cholesterol,
         systolic_bp,
         has_diabetes,
-        is_smoker,
+        current_smoker,
         bmi,
         egfr,
-        on_meds,
-        cholesterol_treated,
+        on_htn_meds,
+        on_cholesterol_meds,
     )
 
 
@@ -79,11 +79,11 @@ def calculate_30_yr_heart_failure_risk(
     hdl_cholesterol: float,
     systolic_bp: float,
     has_diabetes: bool,
-    is_smoker: bool,
+    current_smoker: bool,
     bmi: float,
     egfr: float,
-    on_meds: bool,
-    cholesterol_treated: bool,
+    on_htn_meds: bool,
+    on_cholesterol_meds: bool,
 ) -> float:
     """
     Calculate the 30-year risk of developing heart failure (HF).
@@ -134,11 +134,11 @@ def calculate_30_yr_heart_failure_risk(
         hdl_cholesterol,
         systolic_bp,
         has_diabetes,
-        is_smoker,
+        current_smoker,
         bmi,
         egfr,
-        on_meds,
-        cholesterol_treated,
+        on_htn_meds,
+        on_cholesterol_meds,
     )
 
 
