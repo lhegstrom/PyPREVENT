@@ -1,4 +1,4 @@
-# PyPREVENT
+# PyPREVENT :anatomical_heart:
 
 ###### 2024 updates from AHA on ASCVD (Atherosclerotic and Cardiovascular Disease), CVD (cardiovascular disease) and Heart Failure (HF)
 
