@@ -3,7 +3,7 @@ use pyo3::exceptions::PyValueError;
 use std::f64;
 use std::f64::consts::E;
 
-pub fn calculate_10_yr_heart_failure(
+pub fn calculate_10_yr_heart_failure_risk(
     sex: &str,
     age: f64,
     total_cholesterol: f64,
@@ -189,7 +189,7 @@ pub fn calculate_thirty_year_heart_failure(sex: &str,
 pub fn calculate_10_yr_heart_failure_rust(sex: String, age: f64, total_cholesterol: f64, hdl_cholesterol: f64,
                                     systolic_bp: f64, has_diabetes: bool, is_smoker: bool, bmi: f64,
                                     egfr: f64, on_meds: bool, _cholesterol_treated: bool) -> PyResult<f64> {
-    match calculate_10_yr_heart_failure(&sex, age, total_cholesterol, hdl_cholesterol, systolic_bp, has_diabetes, is_smoker, bmi, egfr, on_meds, _cholesterol_treated) {
+    match calculate_10_yr_heart_failure_risk(&sex, age, total_cholesterol, hdl_cholesterol, systolic_bp, has_diabetes, is_smoker, bmi, egfr, on_meds, _cholesterol_treated) {
         Ok(value) => Ok(value),
         Err(e) => Err(PyValueError::new_err(e)), // Convert Rust String error to Python ValueError
     }

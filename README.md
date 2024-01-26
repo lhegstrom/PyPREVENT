@@ -53,10 +53,10 @@ pyprevent.calculate_30_yr_ascvd_risk(
 | 10 yr Heart Failure (batch)      | :white_check_mark: |
 | 30 yr Heart Failure (individual) | :white_check_mark: |
 | 30 yr Heart Failure (batch)      | :white_check_mark: |
-| 10 yr CVD (individual)           | :x:                |
-| 10 yr CVD (batch)                | :x:                |
-| 30 yr CVD (individual)           | :x:                |
-| 30 yr CVD (batch)                | :x:                |
+| 10 yr CVD (individual)           | :white_check_mark: |
+| 10 yr CVD (batch)                | :white_check_mark: |
+| 30 yr CVD (individual)           | :white_check_mark: |
+| 30 yr CVD (batch)                | :white_check_mark: |
 
 
 ## Program Structure
