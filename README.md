@@ -2,6 +2,8 @@
 
 ###### 2024 updates from AHA on ASCVD (Atherosclerotic and Cardiovascular Disease), CVD (cardiovascular disease) and Heart Failure (HF)
 
+![Python- 3.7 --> 3.12](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
 
 ## Introduction
 The PyPREVENT Equations package offers 2024 updates from the [American Heart Association (AHA) on Atherosclerotic and
@@ -11,7 +13,7 @@ module, leveraging the speed of Rust for equation implementation and the flexibi
 
 ## Installation
 **Requirements:**
-- Python 3.10 on a Mac / Linux system (more compatibility coming soon)
+- Python 3.7 to 3.12 on a Silicon Mac / Linux system (more compatibility coming soon)
 
 
 To install the package, pip install using:
@@ -53,10 +55,10 @@ pyprevent.calculate_30_yr_ascvd_risk(
 | 10 yr Heart Failure (batch)      | :white_check_mark: |
 | 30 yr Heart Failure (individual) | :white_check_mark: |
 | 30 yr Heart Failure (batch)      | :white_check_mark: |
-| 10 yr CVD (individual)           | :x:                |
-| 10 yr CVD (batch)                | :x:                |
-| 30 yr CVD (individual)           | :x:                |
-| 30 yr CVD (batch)                | :x:                |
+| 10 yr CVD (individual)           | :white_check_mark: |
+| 10 yr CVD (batch)                | :white_check_mark: |
+| 30 yr CVD (individual)           | :white_check_mark: |
+| 30 yr CVD (batch)                | :white_check_mark: |
 
 
 ## Program Structure

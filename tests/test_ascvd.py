@@ -1,6 +1,9 @@
-import slash
-import pyprevent
 import pandas as pd
+import pyprevent
+import slash
+from hypothesis import given
+
+from .fixtures import TEST_PATIENT, generate_10_yr_test_case, generate_30_yr_test_case
 
 
 def test_calculate_10_yr_ascvd_risk_basic():
@@ -13,6 +16,32 @@ def test_calculate_10_yr_ascvd_risk_basic():
         "MALE", 68, 300, 85, 150, False, True, 35, 65, False, True
     )
     slash.assert_almost_equal(result, 12.9, delta=0.1)
+
+
+def test_calculate_10_yr_ascvd_risk_default_patient():
+    test_dict = {k: v for k, v in TEST_PATIENT.items() if not k.endswith("_expected")}
+    result = pyprevent.calculate_10_yr_ascvd_risk(**test_dict)
+    expected_result = TEST_PATIENT["10_yr_ascvd_expected"]
+    slash.assert_almost_equal(result, expected_result, delta=0.1)
+
+
+def test_calculate_30_yr_ascvd_risk_default_patient():
+    test_dict = {k: v for k, v in TEST_PATIENT.items() if not k.endswith("_expected")}
+    result = pyprevent.calculate_30_yr_ascvd_risk(**test_dict)
+    expected_result = TEST_PATIENT["30_yr_ascvd_expected"]
+    slash.assert_almost_equal(result, expected_result, delta=0.1)
+
+
+@given(generate_10_yr_test_case())
+def test_calculate_10_yr_ascvd_risk_with_hypothesis(test_case):
+    result = pyprevent.calculate_10_yr_ascvd_risk(**test_case)
+    pass
+
+
+@given(generate_30_yr_test_case())
+def test_calculate_30_yr_ascvd_risk_with_hypothesis(test_case):
+    result = pyprevent.calculate_30_yr_ascvd_risk(**test_case)
+    pass
 
 
 def test_invalid_age():
