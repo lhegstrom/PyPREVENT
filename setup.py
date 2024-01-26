@@ -35,6 +35,10 @@ class CustomInstallCommand(install):
         install.run(self)
 
 
+with open("README.md", encoding="utf-8") as f:
+    long_description = f.read()
+
+
 setup(
     name="pyprevent",
     version="0.1.0",
@@ -43,5 +47,12 @@ setup(
         "install": CustomInstallCommand,
     },
     install_requires=read_requirements(),
-    # Include any other relevant package data, scripts, etc.
+    description="Python implementation of 2024 AHA PREVENT calculator",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/lhegstrom/PyPrevent/",
+    project_urls={
+        "Source": "https://github.com/lhegstrom/PyPrevent/",
+        "Tracker": "https://github.com/lhegstrom/PyPrevent/issues",
+    },
 )
