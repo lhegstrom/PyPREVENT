@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use std::f64;
 use std::f64::consts::E;
+use crate::utils::validate_input;
 
 pub fn calculate_10_yr_heart_failure_risk(
     sex: &str,
@@ -16,25 +17,10 @@ pub fn calculate_10_yr_heart_failure_risk(
     on_hypertension_meds: bool,
     _cholesterol_treated: bool,
 ) -> Result<f64, String> {
-    // Input validation
-    if !(30.0..=79.0).contains(&age) {
-        return Err("Age must be between 30 and 79".to_string());
-    }
-    if !(130.0..=320.0).contains(&total_cholesterol) {
-        return Err("Total cholesterol must be between 130 and 320".to_string());
-    }
-    if !(20.0..=100.0).contains(&hdl_cholesterol) {
-        return Err("HDL cholesterol must be between 20 and 100".to_string());
-    }
-    if !(90.0..=200.0).contains(&systolic_blood_pressure) {
-        return Err("Systolic blood pressure must be between 90 and 200".to_string());
-    }
-    if !(18.5..=39.9).contains(&body_mass_index) {
-        return Err("BMI must be between 18.5 and 39.9".to_string());
-    }
-    if !(15.0..=140.0).contains(&estimated_glomerular_filtration_rate) {
-        return Err("eGFR must be between 15 and 140".to_string());
-    }
+
+
+    validate_input(age, total_cholesterol, hdl_cholesterol, systolic_blood_pressure, body_mass_index,
+                   estimated_glomerular_filtration_rate, true)?;
 
 
     let cholesterol_diff = total_cholesterol - hdl_cholesterol;
@@ -93,25 +79,8 @@ pub fn calculate_thirty_year_heart_failure(sex: &str,
     egfr: f64,
     on_htn_meds: bool,
     _cholesterol_treated: bool,) -> Result<f64, String> {
-    // Input validation
-    if !(30.0..=59.0).contains(&age) {
-        return Err("Age must be between 30 and 59".to_string());
-    }
-    if !(130.0..=320.0).contains(&total_cholesterol) {
-        return Err("Total cholesterol must be between 130 and 320".to_string());
-    }
-    if !(20.0..=100.0).contains(&hdl_cholesterol) {
-        return Err("HDL cholesterol must be between 20 and 100".to_string());
-    }
-    if !(90.0..=200.0).contains(&systolic_bp) {
-        return Err("Systolic blood pressure must be between 90 and 200".to_string());
-    }
-    if !(18.5..=39.9).contains(&bmi) {
-        return Err("BMI must be between 18.5 and 39.9".to_string());
-    }
-    if !(15.0..=140.0).contains(&egfr) {
-        return Err("eGFR must be between 15 and 140".to_string());
-    }
+
+    validate_input(age, total_cholesterol, hdl_cholesterol, systolic_bp, bmi,  egfr, false)?;
 
 
     let cholesterol_diff = total_cholesterol - hdl_cholesterol;

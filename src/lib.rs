@@ -2,10 +2,13 @@ use pyo3::prelude::*;
 use heart_failure::*;
 use ascvd::*;
 use cvd::*;
+use utils::validate_input;
 
 mod heart_failure;
 mod ascvd;
 mod cvd;
+mod utils;
+
 
 #[pymodule]
 fn _pyprevent(_py: Python, m: &PyModule) -> PyResult<()> {
