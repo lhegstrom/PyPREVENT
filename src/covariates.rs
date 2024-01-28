@@ -131,8 +131,88 @@ impl Covariates {
             age_min_egfr_factor: -0.0712547,
         }
     }
-}
 
+    pub(crate) fn female_10_yr_cvd() -> Covariates {
+        Covariates {
+            constant: -3.307728,
+            diabetes_factor: 0.8667604,
+            smoker_factor: 0.5360739,
+            htn_meds_factor: 0.3151672,
+            cholesterol_meds_factor: -0.1477655,
+            age_adjustment_factor: 0.7939329,
+            age_squared_factor: 0.0,
+            cholesterol_base_multiplier: 0.02586,
+            total_cholesterol_diff_factor: 0.0305239,
+            hdl_cholesterol_diff_factor: -0.1606857,
+            systolic_bp_min_factor: -0.2394003,
+            systolic_bp_max_factor: 0.3600781,
+            egfr_min_factor: 0.6045917,
+            egfr_max_factor: 0.0433769,
+            htn_meds_systolic_bp_max_factor: -0.0663612,
+            cholesterol_meds_cholesterol_diff_factor: 0.1197879,
+            age_adjustment_cholesterol_diff_factor: -0.0819715,
+            age_adjustment_hdl_cholesterol_diff_factor: 0.0306769,
+            age_adjustment_systolic_bp_max_factor: -0.0946348,
+            diabetes_age_factor: -0.27057,
+            smoker_age_factor: -0.078715,
+            age_min_egfr_factor: -0.1637806,
+        }
+    }
+
+    pub(crate) fn male_10_yr_cvd() -> Covariates {
+        Covariates {
+            constant: -3.031168,
+            diabetes_factor: 0.7692857,
+            smoker_factor: 0.4386871,
+            htn_meds_factor: 0.288879,
+            cholesterol_meds_factor: -0.1337349,
+            age_adjustment_factor: 0.7688528,
+            age_squared_factor: 0.0,
+            cholesterol_base_multiplier: 0.02586,
+            total_cholesterol_diff_factor: 0.0736174,
+            hdl_cholesterol_diff_factor: -0.0954431,
+            systolic_bp_min_factor: -0.4347345,
+            systolic_bp_max_factor: 0.3362658,
+            egfr_min_factor: 0.5378979,
+            egfr_max_factor: 0.0164827,
+            htn_meds_systolic_bp_max_factor: -0.0475924,
+            cholesterol_meds_cholesterol_diff_factor: 0.150273,
+            age_adjustment_cholesterol_diff_factor: -0.0517874,
+            age_adjustment_hdl_cholesterol_diff_factor: 0.0191169,
+            age_adjustment_systolic_bp_max_factor: -0.1049477,
+            diabetes_age_factor: -0.2251948,
+            smoker_age_factor: -0.0895067,
+            age_min_egfr_factor: -0.1543702,
+        }
+    }
+
+    pub(crate) fn female_30_yr_cvd() -> Covariates {
+        Covariates {
+            constant: -1.318827,
+            diabetes_factor: 0.6793894,
+            smoker_factor: 0.3196112,
+            htn_meds_factor: 0.2894,
+            cholesterol_meds_factor: -0.075688,
+            age_adjustment_factor: 0.5503079,
+            age_squared_factor: -0.0928369,
+            cholesterol_base_multiplier: 0.02586,
+            total_cholesterol_diff_factor: 0.0409794,
+            hdl_cholesterol_diff_factor: -0.1663306,
+            systolic_bp_min_factor: -0.1628654,
+            systolic_bp_max_factor: 0.3299505,
+            egfr_min_factor: 0.1857101,
+            egfr_max_factor: 0.0553528,
+            htn_meds_systolic_bp_max_factor: -0.056367,
+            cholesterol_meds_cholesterol_diff_factor: 0.1071019,
+            age_adjustment_cholesterol_diff_factor: -0.0751438,
+            age_adjustment_hdl_cholesterol_diff_factor: 0.0301786,
+            age_adjustment_systolic_bp_max_factor: -0.0998776,
+            diabetes_age_factor: -0.3206166,
+            smoker_age_factor: -0.1607862,
+            age_min_egfr_factor: -0.1450788,
+        }
+    }
+}
 /*
 
 */
