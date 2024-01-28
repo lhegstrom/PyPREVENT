@@ -120,42 +120,20 @@ pub fn calculate_30_yr_cvd_risk(
             Ok(risk_score)
         }
         "male" => {
-            let calculation = 0.4627309 * age_factor - 1.148204 - 0.0984281 * age_squared
-                + 0.0836088 * (0.02586 * cholesterol_difference - 3.5)
-                - 0.1029824 * (0.02586 * hdl_cholesterol - 1.3) / 0.3
-                - 0.2140352 * (systolic_bp.min(110.0) - 110.0) / 20.0
-                + 0.2904325 * (systolic_bp.max(110.0) - 130.0) / 20.0
-                + if has_diabetes { 0.5331276 } else { 0.0 }
-                + if current_smoker { 0.2141914 } else { 0.0 }
-                + 0.1155556 * (egfr.min(60.0) - 60.0) / -15.0
-                + 0.0603775 * (egfr.max(60.0) - 90.0) / -15.0
-                + if on_htn_meds { 0.232714 } else { 0.0 }
-                - if on_cholesterol_meds { 0.0272112 } else { 0.0 }
-                - if on_htn_meds {
-                    0.0384488 * (systolic_bp.max(110.0) - 130.0) / 20.0
-                } else {
-                    0.0
-                }
-                + if on_cholesterol_meds {
-                    0.134192 * (0.02586 * cholesterol_difference - 3.5)
-                } else {
-                    0.0
-                }
-                - 0.0511759 * age_factor * (0.02586 * cholesterol_difference - 3.5)
-                + 0.0165865 * age_factor * (0.02586 * hdl_cholesterol - 1.3) / 0.3
-                - 0.1101437 * age_factor * (systolic_bp.max(110.0) - 130.0) / 20.0
-                - if has_diabetes {
-                    0.2585943 * age_factor
-                } else {
-                    0.0
-                }
-                - if current_smoker {
-                    0.1566406 * age_factor
-                } else {
-                    0.0
-                }
-                - 0.1166776 * age_factor * (egfr.min(60.0) - 60.0) / -15.0;
-
+            let covariates = Covariates::male_30_yr_cvd();
+            let calculation = common_calculation(
+                &covariates,
+                has_diabetes,
+                current_smoker,
+                on_htn_meds,
+                on_cholesterol_meds,
+                systolic_bp,
+                cholesterol_difference,
+                hdl_cholesterol,
+                age_factor,
+                age_squared,
+                egfr,
+            );
             let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
             Ok(risk_score)
         }

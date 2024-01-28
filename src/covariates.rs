@@ -212,6 +212,32 @@ impl Covariates {
             age_min_egfr_factor: -0.1450788,
         }
     }
+    pub(crate) fn male_30_yr_cvd() -> Covariates {
+        Covariates {
+            constant: -1.148204,
+            diabetes_factor: 0.5331276,
+            smoker_factor: 0.2141914,
+            htn_meds_factor: 0.232714,
+            cholesterol_meds_factor: -0.0272112,
+            age_adjustment_factor: 0.4627309,
+            age_squared_factor: -0.0984281,
+            cholesterol_base_multiplier: 0.02586,
+            total_cholesterol_diff_factor: 0.0836088,
+            hdl_cholesterol_diff_factor: -0.1029824,
+            systolic_bp_min_factor: -0.2140352,
+            systolic_bp_max_factor: 0.2904325,
+            egfr_min_factor: 0.1155556,
+            egfr_max_factor: 0.0603775,
+            htn_meds_systolic_bp_max_factor: -0.0384488,
+            cholesterol_meds_cholesterol_diff_factor: 0.134192,
+            age_adjustment_cholesterol_diff_factor: -0.0511759,
+            age_adjustment_hdl_cholesterol_diff_factor: 0.0165865,
+            age_adjustment_systolic_bp_max_factor: -0.1101437,
+            diabetes_age_factor: -0.2585943,
+            smoker_age_factor: -0.1566406,
+            age_min_egfr_factor: -0.1166776,
+        }
+    }
 }
 /*
 
