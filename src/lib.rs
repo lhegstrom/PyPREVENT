@@ -4,9 +4,9 @@ use heart_failure::*;
 use pyo3::prelude::*;
 
 mod ascvd;
+mod covariates;
 mod cvd;
 mod heart_failure;
-mod multipliers;
 mod utils;
 
 #[pymodule]
