@@ -1,0 +1,77 @@
+pub(crate) struct Multipliers {
+    pub(crate) constant: f64,
+    pub(crate) diabetes_factor: f64,
+    pub(crate) smoker_factor: f64,
+    pub(crate) htn_meds_factor: f64,
+    pub(crate) cholesterol_meds_factor: f64,
+    pub(crate) age_adjustment_factor: f64,
+    pub(crate) cholesterol_base_multiplier: f64,
+    pub(crate) total_cholesterol_diff_factor: f64,
+    pub(crate) hdl_cholesterol_diff_factor: f64,
+    pub(crate) systolic_bp_min_factor: f64,
+    pub(crate) systolic_bp_max_factor: f64,
+    pub(crate) egfr_max_factor: f64,
+    pub(crate) egfr_min_factor: f64,
+    pub(crate) htn_meds_systolic_bp_max_factor: f64,
+    pub(crate) cholesterol_meds_cholesterol_diff_factor: f64,
+    pub(crate) age_adjustment_cholesterol_diff_factor: f64,
+    pub(crate) age_adjustment_hdl_cholesterol_diff_factor: f64,
+    pub(crate) age_adjustment_systolic_bp_max_factor: f64,
+    pub(crate) age_min_egfr_factor: f64,
+    pub(crate) diabetes_age_factor: f64,
+    pub(crate) smoker_age_factor: f64,
+}
+
+impl Multipliers {
+    pub(crate) fn female_10_yr_ascvd() -> Multipliers {
+        Multipliers {
+            constant: -3.819975,
+            diabetes_factor: 0.8348585,
+            smoker_factor: 0.4831078,
+            htn_meds_factor: 0.2265309,
+            cholesterol_meds_factor: -0.0592374,
+            age_adjustment_factor: 0.719883,
+            cholesterol_base_multiplier: 0.02586,
+            total_cholesterol_diff_factor: 0.1176967,
+            hdl_cholesterol_diff_factor: -0.151185,
+            systolic_bp_min_factor: -0.0835358,
+            systolic_bp_max_factor: 0.3592852,
+            egfr_min_factor: 0.4864619,
+            egfr_max_factor: 0.0397779,
+            htn_meds_systolic_bp_max_factor: -0.0395762,
+            cholesterol_meds_cholesterol_diff_factor: 0.0844423,
+            age_adjustment_cholesterol_diff_factor: -0.0567839,
+            age_adjustment_hdl_cholesterol_diff_factor: 0.0325692,
+            age_adjustment_systolic_bp_max_factor: -0.1035985,
+            diabetes_age_factor: -0.2417542,
+            smoker_age_factor: -0.0791142,
+            age_min_egfr_factor: -0.1671492,
+        }
+    }
+
+    pub(crate) fn male_10_yr_ascvd() -> Multipliers {
+        Multipliers {
+            constant: -3.500655,
+            diabetes_factor: 0.7189597,
+            smoker_factor: 0.3956973,
+            htn_meds_factor: 0.2036522,
+            cholesterol_meds_factor: -0.0865581,
+            age_adjustment_factor: 0.7099847,
+            cholesterol_base_multiplier: 0.02586,
+            total_cholesterol_diff_factor: 0.1658663,
+            hdl_cholesterol_diff_factor: -0.1144285,
+            systolic_bp_min_factor: -0.2837212,
+            systolic_bp_max_factor: 0.3239977,
+            egfr_min_factor: 0.3690075,
+            egfr_max_factor: 0.0203619,
+            htn_meds_systolic_bp_max_factor: -0.0322916,
+            cholesterol_meds_cholesterol_diff_factor: 0.114563,
+            age_adjustment_cholesterol_diff_factor: -0.0300005,
+            age_adjustment_hdl_cholesterol_diff_factor: 0.0232747,
+            age_adjustment_systolic_bp_max_factor: -0.0927024,
+            diabetes_age_factor: -0.2018525,
+            smoker_age_factor: -0.0970527,
+            age_min_egfr_factor: -0.1217081,
+        }
+    }
+}
