@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "pyprevent"
-version = "0.1.2"
+version = "0.1.3"
 authors = [{email = "lhegstrom@nference.net"}]
 description = "Python implementation of 2024 AHA PREVENT calculator"
 readme = "README.md"
