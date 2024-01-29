@@ -1,7 +1,11 @@
 # PyPREVENT :anatomical_heart:
 
-
 ###### 2024 updates from AHA on ASCVD (Atherosclerotic and Cardiovascular Disease), CVD (cardiovascular disease) and Heart Failure (HF)
+
+<h1 align="center">
+  <img src="https://github.com/lhegstrom/PyPREVENT/blob/main/images/PyPreventLogo.png?raw=true" width="66%">
+  <br>
+</h1>
 
 ![Python- 3.7 --> 3.12](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
@@ -42,7 +46,10 @@ pyprevent.calculate_30_yr_ascvd_risk(
 )
 ```
 
+## Examples
+
 [A longer, and more thorough example is located here.](example_notebooks/Example%20Notebook.ipynb)
+
 
 ## Implementation Status
 
