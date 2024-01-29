@@ -1,5 +1,8 @@
-from pyprevent import _pyprevent
+import numpy as np
 import pandas as pd
+from pyprevent import _pyprevent
+
+from .utils import _prepare_df_for_batch, _report_any_null_values
 
 
 def calculate_10_yr_heart_failure_risk(
@@ -156,7 +159,7 @@ def batch_calculate_10_yr_heart_failure_risk(
     on_htn_meds: str = "on_htn_meds",
     on_cholesterol_meds: str = "on_cholesterol_meds",
     **kwargs,
-) -> list:
+) -> np.ndarray:
     """
     Batch calculate the 10-year risk of heart failure (HF) for a dataset.
 
@@ -180,7 +183,7 @@ def batch_calculate_10_yr_heart_failure_risk(
     - **kwargs: Optional keyword arguments for custom column mappings.
 
     Returns:
-    list: A list of estimated 10-year HF risk percentages for each individual in the DataFrame.
+    np.ndarray: A numpy array of estimated 10-year HF risk percentages for each individual in the DataFrame.
 
     Raises:
     ValueError: If any of the input parameters are outside their valid ranges or if the specified columns are not found in the DataFrame.
@@ -189,7 +192,7 @@ def batch_calculate_10_yr_heart_failure_risk(
     >>> df = pd.DataFrame({...})
     >>> risks = batch_calculate_10_yr_heart_failure_risk(df, sex='gender', age='patient_age', ...)
     >>> print(risks)
-    # Returns: A list of estimated 10-year HF risk percentages
+    # Returns: A numpy array of estimated 10-year HF risk percentages
 
     Alternatively, can pass in a dictionary of column mappings
     >>> df = pd.DataFrame({...})
@@ -207,42 +210,30 @@ def batch_calculate_10_yr_heart_failure_risk(
     ...     'on_cholesterol_meds': 'cholesterol_meds'
     ... }
     >>> risks = batch_calculate_10_yr_heart_failure_risk(df, **column_mappings)
-    # Returns: A list of estimated 10-year HF risk percentages
+    # Returns: A numpy array of estimated 10-year HF risk percentages
     """
 
-    # Default column names
-    column_mapping = {
-        "sex": sex,
-        "age": age,
-        "total_cholesterol": total_cholesterol,
-        "hdl_cholesterol": hdl_cholesterol,
-        "systolic_bp": systolic_bp,
-        "has_diabetes": has_diabetes,
-        "current_smoker": current_smoker,
-        "bmi": bmi,
-        "egfr": egfr,
-        "on_htn_meds": on_htn_meds,
-        "on_cholesterol_meds": on_cholesterol_meds,
-    }
+    data = _prepare_df_for_batch(
+        df,
+        sex,
+        age,
+        total_cholesterol,
+        hdl_cholesterol,
+        systolic_bp,
+        has_diabetes,
+        current_smoker,
+        bmi,
+        egfr,
+        on_htn_meds,
+        on_cholesterol_meds,
+        **kwargs,
+    )
 
-    # Update column names with mappings from kwargs if provided
-    column_mapping.update(kwargs)
+    # Calculate risk for each row
+    result = _pyprevent.calculate_10_yr_hf_rust_parallel_np(data=data)
+    _report_any_null_values(result)
 
-    # Ensure all required column names exist in the DataFrame
-    for key, col in column_mapping.items():
-        if col not in df.columns:
-            raise ValueError(
-                f"Column '{col}' for parameter '{key}' not found in DataFrame."
-            )
-
-    # Reorder DataFrame columns based on the column mapping
-    reordered_df = df[[column_mapping[key] for key in column_mapping]].copy()
-
-    # Calculate HF risk for each row
-    return [
-        _pyprevent.calculate_10_yr_heart_failure_rust(*row)
-        for row in reordered_df.itertuples(index=False)
-    ]
+    return result
 
 
 def batch_calculate_30_yr_heart_failure_risk(
@@ -259,7 +250,7 @@ def batch_calculate_30_yr_heart_failure_risk(
     on_htn_meds: str = "on_htn_meds",
     on_cholesterol_meds: str = "on_cholesterol_meds",
     **kwargs,
-) -> list:
+) -> np.ndarray:
     """
     Batch calculate the 30-year risk of heart failure (HF) for a dataset.
 
@@ -283,7 +274,7 @@ def batch_calculate_30_yr_heart_failure_risk(
     - **kwargs: Optional keyword arguments for custom column mappings.
 
     Returns:
-    list: A list of estimated 30-year HF risk percentages for each individual in the DataFrame.
+    np.ndarray: A numpy array of estimated 30-year HF risk percentages for each individual in the DataFrame.
 
     Raises:
     ValueError: If any of the input parameters are outside their valid ranges or if the specified columns are not found in the DataFrame.
@@ -292,7 +283,7 @@ def batch_calculate_30_yr_heart_failure_risk(
     >>> df = pd.DataFrame({...})
     >>> risks = batch_calculate_30_yr_heart_failure_risk(df, sex='gender', age='patient_age', ...)
     >>> print(risks)
-    # Returns: A list of estimated 30-year HF risk percentages
+    # Returns: A numpy array of estimated 30-year HF risk percentages
 
     Alternatively, can pass in a dictionary of column mappings
     >>> df = pd.DataFrame({...})
@@ -310,38 +301,27 @@ def batch_calculate_30_yr_heart_failure_risk(
     ...     'on_cholesterol_meds': 'cholesterol_meds'
     ... }
     >>> risks = batch_calculate_30_yr_heart_failure_risk(df, **column_mappings)
-    # Returns: A list of estimated 30-year HF risk percentages
+    # Returns: A numpy array of estimated 30-year HF risk percentages
     """
     # Default column names
-    column_mapping = {
-        "sex": sex,
-        "age": age,
-        "total_cholesterol": total_cholesterol,
-        "hdl_cholesterol": hdl_cholesterol,
-        "systolic_bp": systolic_bp,
-        "has_diabetes": has_diabetes,
-        "current_smoker": current_smoker,
-        "bmi": bmi,
-        "egfr": egfr,
-        "on_htn_meds": on_htn_meds,
-        "on_cholesterol_meds": on_cholesterol_meds,
-    }
+    data = _prepare_df_for_batch(
+        df,
+        sex,
+        age,
+        total_cholesterol,
+        hdl_cholesterol,
+        systolic_bp,
+        has_diabetes,
+        current_smoker,
+        bmi,
+        egfr,
+        on_htn_meds,
+        on_cholesterol_meds,
+        **kwargs,
+    )
 
-    # Update column names with mappings from kwargs if provided
-    column_mapping.update(kwargs)
+    # Calculate risk for each row
+    result = _pyprevent.calculate_30_yr_hf_rust_parallel_np(data=data)
+    _report_any_null_values(result)
 
-    # Ensure all required column names exist in the DataFrame
-    for key, col in column_mapping.items():
-        if col not in df.columns:
-            raise ValueError(
-                f"Column '{col}' for parameter '{key}' not found in DataFrame."
-            )
-
-    # Reorder DataFrame columns based on the column mapping
-    reordered_df = df[[column_mapping[key] for key in column_mapping]].copy()
-
-    # Calculate CVD risk for each row
-    return [
-        _pyprevent.calculate_30_yr_heart_failure_rust(*row)
-        for row in reordered_df.itertuples(index=False)
-    ]
+    return result

@@ -11,6 +11,7 @@ features = ["extension-module"]
 
 [dependencies]
 numpy = "0.20"
+rayon = "1.8.1"
 
 [lib]
 name = "rust_aha_formulas"               # The name of the library
