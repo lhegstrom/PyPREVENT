@@ -345,3 +345,8 @@ def batch_calculate_30_yr_ascvd_risk(
         _pyprevent.calculate_30_yr_ascvd_rust(*row)
         for row in reordered_df.itertuples(index=False)
     ]
+
+
+
+if __name__ == '__main__':
+    import pandas as pd

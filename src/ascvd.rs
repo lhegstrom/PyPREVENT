@@ -2,6 +2,8 @@ use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use std::f64;
 use std::f64::consts::E;
+use rayon::prelude::*;
+use numpy::{PyArray, PyReadonlyArrayDyn};
 
 
 pub fn calculate_10_yr_ascvd_risk(
@@ -115,6 +117,8 @@ pub fn calculate_10_yr_ascvd_risk(
         _ => Err("Sex must be either 'male' or 'female'.".to_string()),
     }
 }
+
+
 
 pub fn calculate_30_yr_ascvd_value(
     sex: &str,
@@ -232,4 +236,49 @@ pub fn calculate_30_yr_ascvd_rust(sex: String, age: f64, total_cholesterol: f64,
         Ok(value) => Ok(value),
         Err(e) => Err(PyValueError::new_err(e)), // Convert Rust String error to Python ValueError
     }
+}
+
+#[pyfunction]
+pub fn calculate_10_yr_ascvd_rust_parallel(data: Vec<(String, f64, f64, f64, f64, bool, bool, f64, f64, bool, bool)>) -> PyResult<Vec<f64>> {
+    let results: Vec<_> = data.par_iter()
+        .map(|(sex, age, total_cholesterol, hdl_cholesterol, systolic_bp, has_diabetes, current_smoker, bmi, egfr, on_htn_meds, on_cholesterol_meds)| {
+            calculate_10_yr_ascvd_risk(sex, *age, *total_cholesterol, *hdl_cholesterol, *systolic_bp, *has_diabetes, *current_smoker, *bmi, *egfr, *on_htn_meds, *on_cholesterol_meds)
+        })
+        .collect();
+
+    results.into_iter()
+           .map(|res| res.map_err(|e| PyValueError::new_err(e)))
+           .collect()
+}
+
+#[pyfunction]
+pub fn calculate_10_yr_ascvd_rust_parallel_np(
+    py: Python,
+    data: PyReadonlyArrayDyn<f64>
+) -> PyResult<PyObject> {
+    let shape = data.shape();
+    if shape.len() != 2 || shape[1] != 11 {
+        return Err(PyValueError::new_err("Array shape must be (n, 11)"));
+    }
+
+    let rows = data.as_array().outer_iter()
+        .map(|row| (
+            if row[0] == 1.0 { "male" } else { "female" }, // Convert numeric to "male" or "female"
+            row[1], row[2], row[3], row[4],
+            row[5] != 0.0, // Convert float to bool
+            row[6] != 0.0, // Convert float to bool
+            row[7], row[8],
+            row[9] != 0.0, // Convert float to bool
+            row[10] != 0.0 // Convert float to bool
+        ))
+        .collect::<Vec<_>>();
+
+    let results: Vec<_> = rows.into_par_iter()
+        .map(|(sex, age, total_cholesterol, hdl_cholesterol, systolic_bp, has_diabetes, current_smoker, bmi, egfr, on_htn_meds, on_cholesterol_meds)| {
+            calculate_10_yr_ascvd_risk(sex, age, total_cholesterol, hdl_cholesterol, systolic_bp, has_diabetes, current_smoker, bmi, egfr, on_htn_meds, on_cholesterol_meds)
+                .unwrap_or(f64::NAN) // Handle error by returning NaN
+        })
+        .collect();
+
+    Ok(PyArray::from_vec(py, results).to_object(py))
 }
