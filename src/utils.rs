@@ -60,6 +60,7 @@ pub fn common_calculation(
     adjusted_age: f64,
     adjusted_age_squared: f64,
     egfr: f64,
+    bmi: f64,
 ) -> f64 {
     let diabetes_factor = if has_diabetes {
         covariates.diabetes_factor
@@ -101,6 +102,9 @@ pub fn common_calculation(
     let egfr_adjusted_min = (egfr.min(60.0) - 60.0) / -15.0;
     let egfr_adjusted_max = (egfr.max(60.0) - 90.0) / -15.0;
 
+    let bmi_adjusted_min = (bmi.min(30.0) - 25.0) / 5.0;
+    let bmi_adjusted_max = (bmi.max(30.0) - 30.0) / 5.0;
+
     vec![
         covariates.age_adjustment_factor * adjusted_age,
         covariates.age_squared_factor * adjusted_age_squared,
@@ -134,6 +138,9 @@ pub fn common_calculation(
         diabetes_age_factor,
         smoker_age_factor,
         covariates.age_min_egfr_factor * adjusted_age * egfr_adjusted_min,
+        covariates.bmi_min_factor * bmi_adjusted_min,
+        covariates.bmi_max_factor * bmi_adjusted_max,
+        covariates.age_bmi_max_factor * adjusted_age * bmi_adjusted_max,
     ]
     .iter()
     .sum()

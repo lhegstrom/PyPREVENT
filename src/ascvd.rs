@@ -47,6 +47,7 @@ pub fn calculate_10_yr_ascvd_risk(
                 adjusted_age,
                 adjusted_age_squared,
                 egfr,
+                bmi,
             );
             let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
             Ok(risk_score)
@@ -65,6 +66,7 @@ pub fn calculate_10_yr_ascvd_risk(
                 adjusted_age,
                 adjusted_age_squared,
                 egfr,
+                bmi,
             );
             let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
             Ok(risk_score)
@@ -115,6 +117,7 @@ pub fn calculate_30_yr_ascvd_value(
                 adjusted_age,
                 adjusted_age_squared,
                 egfr,
+                bmi,
             );
             let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
             Ok(risk_score)
@@ -133,6 +136,7 @@ pub fn calculate_30_yr_ascvd_value(
                 adjusted_age,
                 adjusted_age_squared,
                 egfr,
+                bmi,
             );
             let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
             Ok(risk_score)
