@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pyprevent
 import slash
@@ -185,7 +186,7 @@ def test_batch_calculate_10_yr_heart_failure_risk():
     expected_result = [4.723678963112583] * 10
 
     # Assertion
-    assert result == expected_result
+    assert np.array_equal(result, expected_result)
 
 
 def test_batch_calculate_30_yr_heart_failure_risk():
@@ -217,4 +218,4 @@ def test_batch_calculate_30_yr_heart_failure_risk():
     expected_result = [23.4074103963271] * 10
 
     # Assertion
-    assert result == expected_result
+    assert np.array_equal(result, expected_result)

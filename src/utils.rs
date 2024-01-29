@@ -1,4 +1,8 @@
 use crate::covariates::Covariates;
+use numpy::{PyArray, PyReadonlyArrayDyn};
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+use rayon::prelude::*;
 use std::f64;
 
 pub fn validate_input(
@@ -144,4 +148,85 @@ pub fn common_calculation(
     ]
     .iter()
     .sum()
+}
+
+type RiskCalcFn = fn(
+    &str, // sex
+    f64,  // age
+    f64,  // total_cholesterol
+    f64,  // hdl_cholesterol
+    f64,  // systolic_bp
+    bool, // has_diabetes
+    bool, // current_smoker
+    f64,  // bmi
+    f64,  // egfr
+    bool, // on_htn_meds
+    bool, // on_cholesterol_meds
+) -> Result<f64, String>;
+
+pub fn calculate_risk_rust_parallel_np(
+    py: Python,
+    data: PyReadonlyArrayDyn<f64>,
+    risk_calc_fn: RiskCalcFn,
+) -> PyResult<PyObject> {
+    let shape = data.shape();
+    if shape.len() != 2 || shape[1] != 11 {
+        return Err(PyValueError::new_err("Array shape must be (n, 11)"));
+    }
+
+    let rows = data
+        .as_array()
+        .outer_iter()
+        .map(|row| {
+            (
+                if row[0] == 1.0 { "male" } else { "female" }, // Convert numeric to "male" or "female"
+                row[1],
+                row[2],
+                row[3],
+                row[4],
+                row[5] != 0.0, // Convert float to bool
+                row[6] != 0.0, // Convert float to bool
+                row[7],
+                row[8],
+                row[9] != 0.0,  // Convert float to bool
+                row[10] != 0.0, // Convert float to bool
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let results: Vec<_> = rows
+        .into_par_iter()
+        .map(
+            |(
+                sex,
+                age,
+                total_cholesterol,
+                hdl_cholesterol,
+                systolic_bp,
+                has_diabetes,
+                current_smoker,
+                bmi,
+                egfr,
+                on_htn_meds,
+                on_cholesterol_meds,
+            )| {
+                risk_calc_fn(
+                    sex,
+                    age,
+                    total_cholesterol,
+                    hdl_cholesterol,
+                    systolic_bp,
+                    has_diabetes,
+                    current_smoker,
+                    bmi,
+                    egfr,
+                    on_htn_meds,
+                    on_cholesterol_meds,
+                )
+                .unwrap_or(f64::NAN) // Handle error by returning NaN
+            },
+        )
+        .collect();
+
+    Ok(PyArray::from_vec(py, results).to_object(py))
 }

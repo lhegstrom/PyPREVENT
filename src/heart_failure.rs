@@ -1,5 +1,6 @@
 use crate::covariates::Covariates;
-use crate::utils::{common_calculation, validate_input};
+use crate::utils::{calculate_risk_rust_parallel_np, common_calculation, validate_input};
+use numpy::PyReadonlyArrayDyn;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::f64;
@@ -76,7 +77,7 @@ pub fn calculate_10_yr_heart_failure_risk(
     }
 }
 
-pub fn calculate_thirty_year_heart_failure(
+pub fn calculate_30_yr_heart_failure_risk(
     sex: &str,
     age: f64,
     total_cholesterol: f64,
@@ -192,7 +193,7 @@ pub fn calculate_30_yr_heart_failure_rust(
     on_meds: bool,
     _cholesterol_treated: bool,
 ) -> PyResult<f64> {
-    match calculate_thirty_year_heart_failure(
+    match calculate_30_yr_heart_failure_risk(
         &sex,
         age,
         total_cholesterol,
@@ -208,4 +209,20 @@ pub fn calculate_30_yr_heart_failure_rust(
         Ok(value) => Ok(value),
         Err(e) => Err(PyValueError::new_err(e)), // Convert Rust String error to Python ValueError
     }
+}
+
+#[pyfunction]
+pub fn calculate_10_yr_hf_rust_parallel_np(
+    py: Python,
+    data: PyReadonlyArrayDyn<f64>,
+) -> PyResult<PyObject> {
+    calculate_risk_rust_parallel_np(py, data, calculate_10_yr_heart_failure_risk)
+}
+
+#[pyfunction]
+pub fn calculate_30_yr_hf_rust_parallel_np(
+    py: Python,
+    data: PyReadonlyArrayDyn<f64>,
+) -> PyResult<PyObject> {
+    calculate_risk_rust_parallel_np(py, data, calculate_30_yr_heart_failure_risk)
 }

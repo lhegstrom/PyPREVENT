@@ -1,6 +1,7 @@
-import slash
-import pyprevent
+import numpy as np
 import pandas as pd
+import pyprevent
+import slash
 from hypothesis import given
 
 from .fixtures import TEST_PATIENT, generate_10_yr_test_case, generate_30_yr_test_case
@@ -195,11 +196,10 @@ def test_batch_calculate_10_yr_heart_failure_risk():
     expected_result = [7.899575424594809] * 10
 
     # Assertion
-    assert result == expected_result
+    assert np.array_equal(result, expected_result)
 
 
 def test_batch_calculate_30_yr_heart_failure_risk():
-
     # Test data setup
     test_patient = ("female", 40, 200, 50, 120, True, True, 25, 70, True, True)
     test_list = [test_patient for _ in range(10)]
@@ -227,4 +227,4 @@ def test_batch_calculate_30_yr_heart_failure_risk():
     expected_result = [38.87732034588901] * 10
 
     # Assertion
-    assert result == expected_result
+    assert np.array_equal(result, expected_result)
