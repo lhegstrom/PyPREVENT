@@ -3,7 +3,7 @@
 ###### 2024 updates from AHA on ASCVD (Atherosclerotic and Cardiovascular Disease), CVD (cardiovascular disease) and Heart Failure (HF)
 
 <h1 align="center">
-  <img src="https://github.com/lhegstrom/PyPREVENT/blob/main/images/PyPreventLogo.png?raw=true" width="66%">
+  <img src="https://github.com/lhegstrom/PyPREVENT/blob/main/images/PyPreventLogo.png?raw=true" width="100%">
   <br>
 </h1>
 
