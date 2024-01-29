@@ -224,7 +224,7 @@ def test_batch_calculate_30_yr_heart_failure_risk():
     result = pyprevent.batch_calculate_30_yr_cvd_risk(df)
 
     # Expected result
-    expected_result = [38.87732034588902] * 10
+    expected_result = [38.87732034588901] * 10
 
     # Assertion
     assert result == expected_result

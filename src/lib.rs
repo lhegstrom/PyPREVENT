@@ -1,11 +1,13 @@
-use pyo3::prelude::*;
-use heart_failure::*;
 use ascvd::*;
 use cvd::*;
+use heart_failure::*;
+use pyo3::prelude::*;
 
-mod heart_failure;
 mod ascvd;
+mod covariates;
 mod cvd;
+mod heart_failure;
+mod utils;
 
 #[pymodule]
 fn _pyprevent(_py: Python, m: &PyModule) -> PyResult<()> {
