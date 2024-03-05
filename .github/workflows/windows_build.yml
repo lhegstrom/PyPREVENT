@@ -23,14 +23,26 @@ jobs:
     - name: Change to project directory
       run: cd PyPREVENT
 
-    - name: Install dependencies
+    - name: Install dependencies and maturin
       run: |
         python -m venv venv
         .\venv\Scripts\Activate
         pip install --upgrade pip
         pip install -r requirements.txt
+        pip install maturin
       shell: powershell
 
-    - name: Build the wheels
-      run: maturin build --release --strip --out dist
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    
+    - name: Build with maturin
+      run: |
+        .\venv\Scripts\Activate
+        maturin build --release --strip --out dist
+      shell: powershell
+
 
