@@ -46,15 +46,24 @@ jobs:
         maturin build --release --strip --out dist
       shell: powershell
 
-
     - name: Publish to PyPI
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
+        $ErrorActionPreference = 'Stop'
         .\venv\Scripts\Activate
-        twine upload dist/* || if ($LASTEXITCODE -eq 1) { $error_message = Get-Content $env:TWINE_OUTPUT -Raw; if ($error_message -match "File already exists") { Write-Host "Package version already uploaded. Ignoring error."; exit 0 } else { exit $LASTEXITCODE } }
-      shell: powershell
+        try {
+          twine upload dist/*
+        } catch {
+          if ($LASTEXITCODE -eq 1) {
+            $error_message = Get-Content -Path ".\twine_output.log"
+            Write-Output "Warning: $error_message"
+            exit 0
+          } else {
+            exit $LASTEXITCODE
+          }
+        }
 
 
 
