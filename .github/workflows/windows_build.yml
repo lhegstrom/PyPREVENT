@@ -21,7 +21,7 @@ jobs:
         architecture: x64
 
     - name: Change to project directory
-      run: cd PyPREVENT; ls -a
+      run: cd PyPREVENT
 
     - name: Install dependencies
       run: |
