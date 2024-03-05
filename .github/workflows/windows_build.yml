@@ -1,0 +1,72 @@
+name: Build Wheels
+
+on: [push, pull_request]
+
+jobs:
+  build-wheels:
+    name: Build wheels on ${{ matrix.os }} for Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-2022, windows-2019]
+        python-version: ['3.10', '3.11', '3.12', '3.7', '3.8', '3.9']
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout repo
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - name: Change to project directory
+      run: cd PyPREVENT
+
+    - name: Install dependencies and maturin
+      run: |
+        python -m venv venv
+        .\venv\Scripts\Activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install maturin twine
+      shell: powershell
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    
+    - name: Build with maturin
+      run: |
+        .\venv\Scripts\Activate
+        maturin build --release --strip --out dist
+      shell: powershell
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        .\venv\Scripts\Activate
+        try {
+          twine upload dist/*
+        } catch {
+          if ($LASTEXITCODE -eq 1) {
+            $error_message = Get-Content -Path ".\twine_output.log"
+            Write-Output "Warning: $error_message"
+            exit 0
+          } else {
+            exit $LASTEXITCODE
+          }
+        }
+
+
+
+      
+
+
