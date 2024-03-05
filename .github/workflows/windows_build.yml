@@ -23,8 +23,15 @@ jobs:
     - name: Change to project directory
       run: cd PyPREVENT
 
-    - name: Upgrade pip and Install dependencies
-      run: pip install -r requirements.txt
+    - name: Create and activate a virtual environment
+      run: |
+        python -m venv venv
+        source venv/Scripts/activate
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Build the wheels
       run: maturin build --release --strip --out dist
