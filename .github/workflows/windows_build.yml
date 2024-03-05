@@ -29,7 +29,7 @@ jobs:
         .\venv\Scripts\Activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install maturin
+        pip install maturin twine
       shell: powershell
 
     - name: Install Rust
@@ -44,5 +44,17 @@ jobs:
         .\venv\Scripts\Activate
         maturin build --release --strip --out dist
       shell: powershell
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        .\venv\Scripts\Activate
+        twine upload dist/*
+      shell: powershell
+
+
+      
 
 
