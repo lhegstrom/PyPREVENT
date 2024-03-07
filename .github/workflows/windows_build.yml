@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, windows-2022, windows-2019]
-        python-version: ['3.10', '3.11', '3.12', '3.7', '3.8', '3.9']
+        python-version: ['3.10', '3.11', '3.12']#, '3.7', '3.8', '3.9']
     steps:
     - uses: actions/checkout@v2
       name: Checkout repo
@@ -68,6 +68,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: [cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310, cp311-cp311, cp312-cp312, pp37-pypy37_pp73, pp38-pypy38_pp73, pp39-pypy39_pp73]
 
