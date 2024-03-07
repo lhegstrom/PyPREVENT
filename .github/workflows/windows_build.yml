@@ -83,7 +83,6 @@ jobs:
     - name: Install Rust and set up the environment
       run: |
         docker exec manylinux bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
-        docker exec manylinux bash -c "source $HOME/.cargo/env"
 
 
     - name: Build Package
