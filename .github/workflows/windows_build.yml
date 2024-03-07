@@ -78,8 +78,7 @@ jobs:
 
     - name: Set up Docker Container
       run: |
-        docker run -d --name manylinux -v ${{ github.workspace }}/PyPrevent:/PyPrevent quay.io/pypa/manylinux2014_x86_64 /bin/bash
-        docker exec manylinux bash -c "while true; do sleep 30; done"
+        docker run -d --name manylinux -v /home/runner/work/PyPREVENT/PyPREVENT/PyPrevent:/PyPrevent quay.io/pypa/manylinux2014_x86_64 tail -f /dev/null
 
     - name: Install Rust
       run: docker exec manylinux bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
