@@ -81,7 +81,10 @@ jobs:
         docker run -d --name manylinux -v /home/runner/work/PyPREVENT/PyPREVENT/PyPrevent:/PyPrevent quay.io/pypa/manylinux2014_x86_64 tail -f /dev/null
 
     - name: Install Rust and set up the environment
-      run: docker exec manylinux bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source $HOME/.cargo/env"
+      run: |
+        docker exec manylinux bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+        docker exec manylinux bash -c "source $HOME/.cargo/env"
+
 
     - name: Build Package
       run: |
