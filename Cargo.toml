@@ -1,6 +1,6 @@
 [package]
 name = "pyprevent"               # Your package name
-version = "0.1.4"            # The current version of your package
+version = "0.1.5"            # The current version of your package
 edition = "2021"             # The Rust edition to use
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

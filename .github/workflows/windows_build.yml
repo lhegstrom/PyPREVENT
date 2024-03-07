@@ -3,7 +3,7 @@ name: Build Wheels
 on: [push, pull_request]
 
 jobs:
-  build-wheels:
+  build-windows-wheels:
     name: Build wheels on ${{ matrix.os }} for Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -65,8 +65,36 @@ jobs:
           }
         }
 
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310, cp311-cp311, cp312-cp312, pp37-pypy37_pp73, pp38-pypy38_pp73, pp39-pypy39_pp73]
 
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout code
 
-      
+    - name: Set up Docker Container
+      run: |
+        docker run -d --name manylinux -v ${{ github.workspace }}/PyPrevent:/PyPrevent quay.io/pypa/manylinux2014_x86_64 /bin/bash
+        docker exec manylinux bash -c "while true; do sleep 30; done"
 
+    - name: Install Rust
+      run: docker exec manylinux bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
 
+    - name: Build Package
+      run: |
+        docker exec manylinux bash -c "\
+        source $HOME/.cargo/env && \
+        export PATH=/opt/python/${{ matrix.python-version }}/bin:\$PATH && \
+        cd /PyPrevent && \
+        pip install maturin && \
+        maturin build --release --manylinux 2014"
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        twine upload dist/*
