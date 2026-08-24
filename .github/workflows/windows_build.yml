@@ -21,10 +21,6 @@ jobs:
           - "3.11"
           - "3.12"
 
-    defaults:
-      run:
-        working-directory: PyPrevent
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -35,18 +31,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: Set up Rust
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Create virtual environment and install dependencies
+      - name: Create virtual environment
         shell: powershell
         run: |
           python -m venv venv
+
+      - name: Install dependencies
+        shell: powershell
+        run: |
           .\venv\Scripts\python.exe -m pip install --upgrade pip
           .\venv\Scripts\python.exe -m pip install -r requirements.txt
           .\venv\Scripts\python.exe -m pip install maturin twine
 
-      - name: Build wheel
+      - name: Build Windows wheel
         shell: powershell
         run: |
           .\venv\Scripts\maturin.exe build `
@@ -54,7 +54,12 @@ jobs:
             --strip `
             --out dist
 
-      - name: Publish to PyPI
+      - name: List built wheels
+        shell: powershell
+        run: |
+          Get-ChildItem -Path dist
+
+      - name: Publish Windows wheel to PyPI
         shell: powershell
         env:
           TWINE_USERNAME: __token__
@@ -80,26 +85,42 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Show repository contents
+        run: |
+          pwd
+          ls -la
+          test -f Cargo.toml
+          test -f pyproject.toml
+
       - name: Start manylinux container
         run: |
           docker run -d \
             --name manylinux \
-            -v "${{ github.workspace }}/PyPrevent:/PyPrevent" \
+            -v "${{ github.workspace }}:/PyPrevent" \
             quay.io/pypa/manylinux2014_x86_64 \
             tail -f /dev/null
 
       - name: Install Rust in container
         run: |
           docker exec manylinux bash -c \
-            "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+            "curl --proto '=https' \
+            --tlsv1.2 \
+            -sSf https://sh.rustup.rs \
+            | sh -s -- -y"
 
-      - name: Verify Python interpreter exists
+      - name: Verify project and Python
         run: |
-          docker exec manylinux bash -c \
-            "ls -la /opt/python/${{ matrix.python-version }}/bin && \
-             /opt/python/${{ matrix.python-version }}/bin/python --version"
+          docker exec manylinux bash -c "\
+            echo 'Project directory:' && \
+            ls -la /PyPrevent && \
+            echo 'Cargo.toml:' && \
+            ls -la /PyPrevent/Cargo.toml && \
+            echo 'pyproject.toml:' && \
+            ls -la /PyPrevent/pyproject.toml && \
+            echo 'Python:' && \
+            /opt/python/${{ matrix.python-version }}/bin/python --version"
 
-      - name: Install maturin and build wheel
+      - name: Install maturin and build Linux wheel
         run: |
           docker exec manylinux bash -c "\
             source \$HOME/.cargo/env && \
@@ -114,16 +135,21 @@ jobs:
 
       - name: List built wheels
         run: |
-          ls -lah PyPrevent/dist
+          ls -lah dist
 
       - name: Install Twine
         run: |
           python -m pip install --upgrade pip
           python -m pip install twine
 
-      - name: Publish to PyPI
+      - name: Publish Linux wheel to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          python -m twine upload --skip-existing PyPrevent/dist/*
+          python -m twine upload --skip-existing dist/*
+
+      - name: Stop manylinux container
+        if: always()
+        run: |
+          docker rm -f manylinux || true
