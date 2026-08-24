@@ -269,7 +269,7 @@ impl Covariates {
     pub(crate) fn female_10_yr_hf() -> Covariates {
         Covariates {
             constant: -4.310409,
-            diabetes_factor: 1.0,
+            diabetes_factor: 1.038346,
             smoker_factor: 0.583916,
             htn_meds_factor: 0.3534442,
             cholesterol_meds_factor: 0.0,
