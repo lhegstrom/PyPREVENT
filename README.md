@@ -18,7 +18,7 @@ module, leveraging the speed of Rust for equation implementation and the flexibi
 
 ## Installation
 **Requirements:**
-- Python 3.7 to 3.12 on a Silicon Mac / Linux system (more compatibility coming soon)
+- Python 3.7 to 3.14 on a Silicon Mac / Linux system (more compatibility coming soon)
 
 
 To install the package, pip install using:
