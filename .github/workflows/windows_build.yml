@@ -20,6 +20,8 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+          - "3.13"
+          - "3.14"
 
     steps:
       - name: Checkout repo
@@ -80,6 +82,8 @@ jobs:
           - cp310-cp310
           - cp311-cp311
           - cp312-cp312
+          - cp313-cp313
+          - cp314-cp314
 
     steps:
       - name: Checkout repo
