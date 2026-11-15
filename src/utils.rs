@@ -1,5 +1,5 @@
 use crate::covariates::Covariates;
-use numpy::{PyArray, PyReadonlyArrayDyn};
+use numpy::{PyArray, PyReadonlyArrayDyn, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -109,7 +109,7 @@ pub fn common_calculation(
     let bmi_adjusted_min = (bmi.min(30.0) - 25.0) / 5.0;
     let bmi_adjusted_max = (bmi.max(30.0) - 30.0) / 5.0;
 
-    vec![
+    [
         covariates.age_adjustment_factor * adjusted_age,
         covariates.age_squared_factor * adjusted_age_squared,
         covariates.constant,
@@ -168,65 +168,58 @@ pub fn calculate_risk_rust_parallel_np(
     py: Python,
     data: PyReadonlyArrayDyn<f64>,
     risk_calc_fn: RiskCalcFn,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     let shape = data.shape();
     if shape.len() != 2 || shape[1] != 11 {
         return Err(PyValueError::new_err("Array shape must be (n, 11)"));
     }
 
-    let rows = data
-        .as_array()
-        .outer_iter()
-        .map(|row| {
-            (
-                if row[0] == 1.0 { "male" } else { "female" }, // Convert numeric to "male" or "female"
-                row[1],
-                row[2],
-                row[3],
-                row[4],
-                row[5] != 0.0, // Convert float to bool
-                row[6] != 0.0, // Convert float to bool
-                row[7],
-                row[8],
-                row[9] != 0.0,  // Convert float to bool
-                row[10] != 0.0, // Convert float to bool
-            )
-        })
-        .collect::<Vec<_>>();
-
-    let results: Vec<_> = rows
-        .into_par_iter()
-        .map(
-            |(
-                sex,
-                age,
-                total_cholesterol,
-                hdl_cholesterol,
-                systolic_bp,
-                has_diabetes,
-                current_smoker,
-                bmi,
-                egfr,
-                on_htn_meds,
-                on_cholesterol_meds,
-            )| {
-                risk_calc_fn(
-                    sex,
-                    age,
-                    total_cholesterol,
-                    hdl_cholesterol,
-                    systolic_bp,
-                    has_diabetes,
-                    current_smoker,
-                    bmi,
-                    egfr,
-                    on_htn_meds,
-                    on_cholesterol_meds,
-                )
-                .unwrap_or(f64::NAN) // Handle error by returning NaN
-            },
+    // Own the input before releasing the GIL: Python may mutate its array while
+    // other threads run. Iteration preserves logical row order for strided input.
+    let rows: Vec<f64> = if data.is_c_contiguous() {
+        data.as_slice()?.to_vec()
+    } else {
+        let view = data
+            .as_array()
+            .into_dimensionality::<numpy::ndarray::Ix2>()
+            .expect("two-dimensional shape was validated above");
+        let mut rows = Vec::with_capacity(view.len());
+        for row in view.outer_iter() {
+            rows.extend(row.iter().copied());
+        }
+        rows
+    };
+    drop(data);
+    let calculate_row = |row: &[f64]| {
+        if [0, 5, 6, 9, 10]
+            .iter()
+            .any(|&i| row[i] != 0.0 && row[i] != 1.0)
+        {
+            return f64::NAN;
+        }
+        risk_calc_fn(
+            if row[0] == 1.0 { "male" } else { "female" },
+            row[1],
+            row[2],
+            row[3],
+            row[4],
+            row[5] == 1.0,
+            row[6] == 1.0,
+            row[7],
+            row[8],
+            row[9] == 1.0,
+            row[10] == 1.0,
         )
-        .collect();
+        .unwrap_or(f64::NAN)
+    };
+    let results: Vec<f64> = py.detach(|| {
+        // Small batches do less work than scheduling a Rayon task costs.
+        if rows.len() < 256 * 11 {
+            rows.chunks_exact(11).map(calculate_row).collect()
+        } else {
+            rows.par_chunks_exact(11).map(calculate_row).collect()
+        }
+    });
 
-    Ok(PyArray::from_vec(py, results).to_object(py))
+    Ok(PyArray::from_vec(py, results).into_any().unbind())
 }

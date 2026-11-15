@@ -4,7 +4,6 @@ use numpy::PyReadonlyArrayDyn;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::f64;
-use std::f64::consts::E;
 
 pub fn calculate_10_yr_heart_failure_risk(
     sex: &str,
@@ -33,9 +32,8 @@ pub fn calculate_10_yr_heart_failure_risk(
     let age_factor = (age - 55.0) / 10.0;
     let age_squared = age_factor.powi(2);
 
-    let sex_lower = sex.to_lowercase();
-    match sex_lower.as_str() {
-        "female" => {
+    match sex {
+        value if value.eq_ignore_ascii_case("female") => {
             let covariates = Covariates::female_10_yr_hf();
             let calculation = common_calculation(
                 &covariates,
@@ -51,10 +49,11 @@ pub fn calculate_10_yr_heart_failure_risk(
                 estimated_glomerular_filtration_rate,
                 body_mass_index,
             );
-            let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
+            let odds = calculation.exp();
+            let risk_score = odds / (1.0 + odds) * 100.0;
             Ok(risk_score)
         }
-        "male" => {
+        value if value.eq_ignore_ascii_case("male") => {
             let covariates = Covariates::male_10_yr_hf();
             let calculation = common_calculation(
                 &covariates,
@@ -70,7 +69,8 @@ pub fn calculate_10_yr_heart_failure_risk(
                 estimated_glomerular_filtration_rate,
                 body_mass_index,
             );
-            let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
+            let odds = calculation.exp();
+            let risk_score = odds / (1.0 + odds) * 100.0;
             Ok(risk_score)
         }
         _ => Err("Sex must be either 'male' or 'female'.".to_string()),
@@ -104,8 +104,8 @@ pub fn calculate_30_yr_heart_failure_risk(
     let age_factor = (age - 55.0) / 10.0;
     let age_factor_squared = age_factor.powi(2);
 
-    match sex.to_lowercase().as_str() {
-        "female" => {
+    match sex {
+        value if value.eq_ignore_ascii_case("female") => {
             let covariates = Covariates::female_30_yr_hf();
             let calculation = common_calculation(
                 &covariates,
@@ -121,10 +121,11 @@ pub fn calculate_30_yr_heart_failure_risk(
                 egfr,
                 bmi,
             );
-            let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
+            let odds = calculation.exp();
+            let risk_score = odds / (1.0 + odds) * 100.0;
             Ok(risk_score)
         }
-        "male" => {
+        value if value.eq_ignore_ascii_case("male") => {
             let covariates = Covariates::male_30_yr_hf();
             let calculation = common_calculation(
                 &covariates,
@@ -140,7 +141,8 @@ pub fn calculate_30_yr_heart_failure_risk(
                 egfr,
                 bmi,
             );
-            let risk_score = E.powf(calculation) / (1.0 + E.powf(calculation)) * 100.0;
+            let odds = calculation.exp();
+            let risk_score = odds / (1.0 + odds) * 100.0;
             Ok(risk_score)
         }
         _ => Err("Sex must be either 'male' or 'female'.".to_string()),
@@ -215,7 +217,7 @@ pub fn calculate_30_yr_heart_failure_rust(
 pub fn calculate_10_yr_hf_rust_parallel_np(
     py: Python,
     data: PyReadonlyArrayDyn<f64>,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     calculate_risk_rust_parallel_np(py, data, calculate_10_yr_heart_failure_risk)
 }
 
@@ -223,6 +225,6 @@ pub fn calculate_10_yr_hf_rust_parallel_np(
 pub fn calculate_30_yr_hf_rust_parallel_np(
     py: Python,
     data: PyReadonlyArrayDyn<f64>,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     calculate_risk_rust_parallel_np(py, data, calculate_30_yr_heart_failure_risk)
 }

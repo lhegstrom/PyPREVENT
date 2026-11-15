@@ -1,0 +1,62 @@
+{
+  "python": "3.12.3",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "numpy": "1.26.4",
+  "pandas": "2.2.3",
+  "package": "/private/tmp/pyprevent-baseline-env/lib/python3.12/site-packages/pyprevent/__init__.py",
+  "rayon_threads": "1",
+  "repeats": 7,
+  "measurements": [
+    {
+      "rows": 1,
+      "conversion_ms": 0.500334077514708,
+      "native_ms": 0.0007080379873514175,
+      "strided_ms": 0.0007080379873514175,
+      "invalid_ms": 0.00045797787606716156,
+      "end_to_end_ms": 0.5283330101519823,
+      "two_calls_sequential_ms": 0.00100000761449337,
+      "two_calls_threaded_ms": 0.04258297849446535
+    },
+    {
+      "rows": 10,
+      "conversion_ms": 0.5079159745946527,
+      "native_ms": 0.011874944902956486,
+      "strided_ms": 0.01016608439385891,
+      "invalid_ms": 0.007916940376162529,
+      "end_to_end_ms": 0.6165410159155726,
+      "two_calls_sequential_ms": 0.014499993994832039,
+      "two_calls_threaded_ms": 0.05849997978657484
+    },
+    {
+      "rows": 1000,
+      "conversion_ms": 0.6558750756084919,
+      "native_ms": 0.09437510743737221,
+      "strided_ms": 0.09241607040166855,
+      "invalid_ms": 0.09470898658037186,
+      "end_to_end_ms": 0.7125419797375798,
+      "two_calls_sequential_ms": 0.18904195167124271,
+      "two_calls_threaded_ms": 0.23929204326123
+    },
+    {
+      "rows": 100000,
+      "conversion_ms": 10.994541924446821,
+      "native_ms": 8.292249985970557,
+      "strided_ms": 7.49866699334234,
+      "invalid_ms": 7.173249963670969,
+      "end_to_end_ms": 19.023832981474698,
+      "two_calls_sequential_ms": 15.84895804990083,
+      "two_calls_threaded_ms": 16.028791898861527
+    },
+    {
+      "rows": 1000000,
+      "conversion_ms": 108.78687491640449,
+      "native_ms": 77.08233303856105,
+      "strided_ms": 79.21950006857514,
+      "invalid_ms": 75.41699998546392,
+      "end_to_end_ms": 190.85583300329745,
+      "two_calls_sequential_ms": 173.27516595833004,
+      "two_calls_threaded_ms": 160.67729191854596
+    }
+  ],
+  "process_peak_rss_mib": 848.09375
+}

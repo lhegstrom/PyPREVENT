@@ -32,8 +32,10 @@ def _prepare_df_for_batch(
         "on_cholesterol_meds": on_cholesterol_meds,
     }
 
-    # Update column names with mappings from kwargs if provided
-    column_mapping.update(kwargs)
+    if kwargs:
+        raise TypeError(f"Unexpected column mappings: {', '.join(sorted(kwargs))}")
+    if not df.columns.is_unique:
+        raise ValueError("DataFrame column names must be unique.")
 
     # Ensure all required column names exist in the DataFrame
     for key, col in column_mapping.items():
@@ -42,22 +44,25 @@ def _prepare_df_for_batch(
                 f"Column '{col}' for parameter '{key}' not found in DataFrame."
             )
 
-    reordered_df = df[[column_mapping[key] for key in column_mapping]].copy()
-
-    sex_col = column_mapping["sex"]
-    reordered_df[sex_col] = (
-        reordered_df[sex_col].str.lower().map({"female": 0, "male": 1})
-    )
-
-    # Convert boolean columns to integers based on the column names from column_mapping
-    bool_cols = [
-        column_mapping["has_diabetes"],
-        column_mapping["current_smoker"],
-        column_mapping["on_htn_meds"],
-        column_mapping["on_cholesterol_meds"],
-    ]
-    reordered_df[bool_cols] = reordered_df[bool_cols].astype(int)
-    return reordered_df.values.astype(np.float64)
+    # Allocate the native layout once, without copying the whole DataFrame.
+    # Invalid categories remain NaN so the native validator can reject the row.
+    data = np.empty((len(df), len(column_mapping)), dtype=np.float64)
+    bool_keys = {"has_diabetes", "current_smoker", "on_htn_meds", "on_cholesterol_meds"}
+    for index, (key, column) in enumerate(column_mapping.items()):
+        values = df[column]
+        if key == "sex":
+            try:
+                values = values.str.lower().map({"female": 0, "male": 1})
+            except AttributeError:
+                # An entirely numeric/missing column has no string accessor.
+                data[:, index] = np.nan
+                continue
+        elif key in bool_keys and not pd.api.types.is_bool_dtype(values.dtype):
+            values = values.where(values.isin([0, 1]))
+        if not pd.api.types.is_numeric_dtype(values.dtype):
+            values = pd.to_numeric(values, errors="coerce")
+        data[:, index] = values.to_numpy(dtype=np.float64, na_value=np.nan)
+    return data
 
 
 def _report_any_null_values(result: np.ndarray) -> None:
@@ -65,5 +70,5 @@ def _report_any_null_values(result: np.ndarray) -> None:
     if null_rows > 0:
         print(
             f"WARNING: {null_rows} patients were unable to have the score calculated"
-            f"as their input parameters were out of the range."
+            f" as their input parameters were invalid or out of range."
         )

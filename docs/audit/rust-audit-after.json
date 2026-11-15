@@ -1,0 +1,152 @@
+[
+  {
+    "name": "autocfg",
+    "version": "1.5.1",
+    "vulns": []
+  },
+  {
+    "name": "crossbeam-deque",
+    "version": "0.8.8",
+    "vulns": []
+  },
+  {
+    "name": "crossbeam-epoch",
+    "version": "0.9.21",
+    "vulns": []
+  },
+  {
+    "name": "crossbeam-utils",
+    "version": "0.8.23",
+    "vulns": []
+  },
+  {
+    "name": "either",
+    "version": "1.19.0",
+    "vulns": []
+  },
+  {
+    "name": "heck",
+    "version": "0.5.0",
+    "vulns": []
+  },
+  {
+    "name": "libc",
+    "version": "0.2.191",
+    "vulns": []
+  },
+  {
+    "name": "matrixmultiply",
+    "version": "0.3.11",
+    "vulns": []
+  },
+  {
+    "name": "ndarray",
+    "version": "0.17.2",
+    "vulns": []
+  },
+  {
+    "name": "num-complex",
+    "version": "0.4.6",
+    "vulns": []
+  },
+  {
+    "name": "num-integer",
+    "version": "0.1.47",
+    "vulns": []
+  },
+  {
+    "name": "num-traits",
+    "version": "0.2.19",
+    "vulns": []
+  },
+  {
+    "name": "numpy",
+    "version": "0.30.0",
+    "vulns": []
+  },
+  {
+    "name": "once_cell",
+    "version": "1.21.4",
+    "vulns": []
+  },
+  {
+    "name": "portable-atomic",
+    "version": "1.15.0",
+    "vulns": []
+  },
+  {
+    "name": "portable-atomic-util",
+    "version": "0.2.8",
+    "vulns": []
+  },
+  {
+    "name": "proc-macro2",
+    "version": "1.0.107",
+    "vulns": []
+  },
+  {
+    "name": "pyo3",
+    "version": "0.30.1",
+    "vulns": []
+  },
+  {
+    "name": "pyo3-build-config",
+    "version": "0.30.1",
+    "vulns": []
+  },
+  {
+    "name": "pyo3-ffi",
+    "version": "0.30.1",
+    "vulns": []
+  },
+  {
+    "name": "pyo3-macros",
+    "version": "0.30.1",
+    "vulns": []
+  },
+  {
+    "name": "pyo3-macros-backend",
+    "version": "0.30.1",
+    "vulns": []
+  },
+  {
+    "name": "quote",
+    "version": "1.0.47",
+    "vulns": []
+  },
+  {
+    "name": "rawpointer",
+    "version": "0.2.1",
+    "vulns": []
+  },
+  {
+    "name": "rayon",
+    "version": "1.12.0",
+    "vulns": []
+  },
+  {
+    "name": "rayon-core",
+    "version": "1.13.0",
+    "vulns": []
+  },
+  {
+    "name": "rustc-hash",
+    "version": "2.1.3",
+    "vulns": []
+  },
+  {
+    "name": "syn",
+    "version": "3.0.10",
+    "vulns": []
+  },
+  {
+    "name": "target-lexicon",
+    "version": "0.13.6",
+    "vulns": []
+  },
+  {
+    "name": "unicode-ident",
+    "version": "1.0.27",
+    "vulns": []
+  }
+]
