@@ -17,29 +17,25 @@ Cardiovascular Disease (ASCVD), Cardiovascular Disease (CVD), and Heart Failure
 module, leveraging the speed of Rust for equation implementation and the flexibility of Python for ease of use.
 
 ## Installation
-This checkout prepares **0.1.7**, which has not been published by this work.
-The dependency and compatibility information below describes this version.
 
-**Requirements:**
-- Python 3.10 or newer. CI targets standard CPython 3.10–3.15 on Linux, Windows, and macOS.
-- NumPy >=1.26.4,<3 and pandas >=2.2.3,<4 are installed automatically.
-- Building from source requires Rust; the repository pins its tested toolchain in `rust-toolchain.toml`.
-
-
-To install the currently published package from PyPI:
+Install the published package from PyPI:
 ```bash
 python -m pip install pyprevent
 ```
 
-To install this 0.1.7 checkout instead, run `python -m pip install .` from the
-repository root with Rust installed. Until 0.1.7 is released, a PyPI installation
-does not include these maintenance changes.
+To install from a local copy of this repository, run `python -m pip install .`
+from the repository root. This requires Rust.
 
-## Build and compatibility status
+**Requirements:**
+- Python 3.10 or later. The continuous integration (CI) workflow tests standard CPython 3.10 to 3.15 on Linux, Windows, and macOS.
+- NumPy 1.26.4 or later (below 3) and pandas 2.2.3 or later (below 4). pip installs them automatically.
+- To build from source, install the Rust toolchain. The `rust-toolchain.toml` file defines the tested version.
 
-The shared [distribution workflow](.github/workflows/windows_build.yml) builds
-Linux, Windows, and macOS packages; its filename is historical. Each platform
-below runs the same Python 3.10–3.15 matrix, for **24 wheel jobs**:
+## Build and test matrix
+
+The distribution workflow, [`windows_build.yml`](.github/workflows/windows_build.yml),
+builds wheels for Linux, Windows, and macOS. Its filename is historical. Each
+platform below runs the same Python 3.10 to 3.15 matrix. This creates **24 wheel jobs**.
 
 | Platform | Architecture | Runner | Wheel build |
 |---|---|---|---|
@@ -48,22 +44,21 @@ below runs the same Python 3.10–3.15 matrix, for **24 wheel jobs**:
 | macOS, Apple Silicon | arm64 | `macos-15` | Native Apple Silicon |
 | macOS, Intel | x86_64 | `macos-15-intel` | Native Intel |
 
-Every job uses Rust 1.92.0, Maturin 1.16.0, and the checked-in Cargo.lock, then
-installs its wheel, runs tests outside the checkout, audits the installed
-dependencies, and uploads a uniquely named artifact. A separate Ubuntu job
-builds the source distribution, rebuilds a wheel from it, and tests that wheel.
+Each wheel job:
+1. Builds the wheel with Rust 1.92.0 and Maturin 1.16.0, using the committed `Cargo.lock`.
+2. Installs the wheel with its test extras.
+3. Runs the tests outside the checkout. The suite has 315 tests.
+4. Runs `pip-audit` on the installed dependencies.
+5. Uploads the wheel as an artifact.
 
-Local Apple Silicon validation passed **315 tests on each of Python 3.10, 3.12,
-3.13, 3.14, and 3.15**. Version 0.1.7 specifically built and passed the suite on
-Python 3.14.10 and 3.15.2; both wheels and the source distribution passed Twine
-validation. The hosted matrix, including Linux, Windows, and Intel macOS, has
-**not yet run for these changes**. These are standard GIL-enabled CPython builds;
-free-threaded Python, Linux ARM64, and Windows ARM64 are not in this matrix.
+A separate Ubuntu job builds the source distribution. It rebuilds a wheel from
+that source distribution and runs the tests on the rebuilt wheel.
 
-See [validation and benchmark results](docs/audit/IMPLEMENTATION.md) and the
-[0.1.7 release notes](CHANGELOG.md). Local million-row benchmarks measured about
-3x faster Rust computation and 16% lower complete batch-call time, compared with
-the previous code on the same machine; results vary by hardware and workload.
+These are standard GIL-enabled CPython builds. Free-threaded Python, Linux ARM64,
+and Windows ARM64 are not in the matrix.
+
+For validation and benchmark results, see [docs/audit/IMPLEMENTATION.md](docs/audit/IMPLEMENTATION.md).
+For changes by version, see the [changelog](CHANGELOG.md).
 
 ## TL;DR
 
@@ -177,20 +172,22 @@ RAYON_NUM_THREADS=4 python benchmarks/batch.py --output /tmp/benchmark.json
 
 ## Publishing
 
-Pushes to `main` build, test, and audit distributions without publishing.
-Pull requests and pushes to other branches do not trigger builds. Manual runs
-are accepted only on `main`. Release tags must point to a commit in the history
-of `main`; a source-validation job enforces this before any build starts.
-Only a published GitHub release with a matching `v<package-version>` tag can enter
-the publishing job, after all checks succeed.
+Pushes to `main` build, test, and audit the distributions. They do not publish.
+Pull requests and pushes to other branches do not start these builds. Manual runs
+work only on `main`. A source check requires the commit to be in the history of `main`.
 
-Before the next release, configure a PyPI Trusted Publisher for repository
-`lhegstrom/PyPREVENT`, workflow `windows_build.yml`, and environment `pypi`.
-Configure required reviewers on the GitHub `pypi` environment. The workflow uses
-OIDC rather than the former `PYPI_API_TOKEN`; it will fail closed until Trusted
-Publishing is configured. See the [PyPI setup guide](https://docs.pypi.org/trusted-publishers/adding-a-publisher/).
+Only a published GitHub release can start the publish job. The release tag must
+be `v<version>` and must match the package version. All checks must pass first.
 
-Version 0.1.7 is set in Cargo.toml, pyproject.toml, and Cargo.lock. After merging
-the `0.1.7` branch into `main` and reviewing successful CI artifacts, a `v0.1.7`
-GitHub release can publish the distributions. No release has been published by
-these maintenance edits.
+Before you publish, configure a PyPI Trusted Publisher with these values:
+- Repository: `lhegstrom/PyPREVENT`
+- Workflow: `windows_build.yml`
+- Environment: `pypi`
+
+Also configure required reviewers on the GitHub `pypi` environment. The workflow
+uses OIDC, not the former `PYPI_API_TOKEN`. It fails until Trusted Publishing is
+configured. See the [PyPI setup guide](https://docs.pypi.org/trusted-publishers/adding-a-publisher/).
+
+To release a version, set the same version in `Cargo.toml`, `pyproject.toml`, and
+`Cargo.lock`. Merge the change into `main`, review the CI artifacts, and then publish
+a GitHub release with the tag `v<version>`.
