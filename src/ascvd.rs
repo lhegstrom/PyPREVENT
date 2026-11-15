@@ -1,230 +1,59 @@
-use crate::covariates::Covariates;
-use crate::utils::{calculate_risk_rust_parallel_np, common_calculation, validate_input};
+//! Atherosclerotic cardiovascular disease (ASCVD) equations and their Python bindings.
+
+use crate::model_coefficients::{
+    RiskModelCoefficients, FEMALE_10_YR_ASCVD, FEMALE_30_YR_ASCVD, MALE_10_YR_ASCVD,
+    MALE_30_YR_ASCVD,
+};
+use crate::risk_calculation::{calculate_batch_risk, calculate_patient_risk};
+use crate::risk_factors::{RiskFactors, RiskHorizon, Sex};
 use numpy::PyReadonlyArrayDyn;
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use std::f64;
 
-pub fn calculate_10_yr_ascvd_risk(
-    sex: &str,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_bp: f64,
-    has_diabetes: bool,
-    current_smoker: bool,
-    bmi: f64,
-    egfr: f64,
-    on_htn_meds: bool,
-    on_cholesterol_meds: bool,
-) -> Result<f64, String> {
-    validate_input(
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        bmi,
-        egfr,
-        true,
-    )?;
-
-    let cholesterol_diff = total_cholesterol - hdl_cholesterol;
-    let adjusted_age = (age - 55.0) / 10.0;
-    let adjusted_age_squared = adjusted_age.powi(2);
-
-    match sex {
-        value if value.eq_ignore_ascii_case("female") => {
-            let covariates = Covariates::female_10_yr_ascvd();
-            let calculation = common_calculation(
-                &covariates,
-                has_diabetes,
-                current_smoker,
-                on_htn_meds,
-                on_cholesterol_meds,
-                systolic_bp,
-                cholesterol_diff,
-                hdl_cholesterol,
-                adjusted_age,
-                adjusted_age_squared,
-                egfr,
-                bmi,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        value if value.eq_ignore_ascii_case("male") => {
-            let covariates = Covariates::male_10_yr_ascvd();
-            let calculation = common_calculation(
-                &covariates,
-                has_diabetes,
-                current_smoker,
-                on_htn_meds,
-                on_cholesterol_meds,
-                systolic_bp,
-                cholesterol_diff,
-                hdl_cholesterol,
-                adjusted_age,
-                adjusted_age_squared,
-                egfr,
-                bmi,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        _ => Err("Sex must be either 'male' or 'female'.".to_string()),
+fn select_ascvd_coefficients(sex: Sex, horizon: RiskHorizon) -> &'static RiskModelCoefficients {
+    match (sex, horizon) {
+        (Sex::Female, RiskHorizon::TenYear) => &FEMALE_10_YR_ASCVD,
+        (Sex::Male, RiskHorizon::TenYear) => &MALE_10_YR_ASCVD,
+        (Sex::Female, RiskHorizon::ThirtyYear) => &FEMALE_30_YR_ASCVD,
+        (Sex::Male, RiskHorizon::ThirtyYear) => &MALE_30_YR_ASCVD,
     }
 }
 
-pub fn calculate_30_yr_ascvd_risk(
-    sex: &str,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_bp: f64,
-    has_diabetes: bool,
-    current_smoker: bool,
-    bmi: f64,
-    egfr: f64,
-    on_htn_meds: bool,
-    on_cholesterol_meds: bool,
-) -> Result<f64, String> {
-    validate_input(
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        bmi,
-        egfr,
-        false,
-    )?;
-
-    let cholesterol_diff = total_cholesterol - hdl_cholesterol;
-    let adjusted_age = (age - 55.0) / 10.0;
-    let adjusted_age_squared = adjusted_age.powi(2);
-
-    match sex {
-        value if value.eq_ignore_ascii_case("female") => {
-            let covariates = Covariates::female_30_yr_ascvd();
-            let calculation = common_calculation(
-                &covariates,
-                has_diabetes,
-                current_smoker,
-                on_htn_meds,
-                on_cholesterol_meds,
-                systolic_bp,
-                cholesterol_diff,
-                hdl_cholesterol,
-                adjusted_age,
-                adjusted_age_squared,
-                egfr,
-                bmi,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        value if value.eq_ignore_ascii_case("male") => {
-            let covariates = Covariates::male_30_yr_ascvd();
-            let calculation = common_calculation(
-                &covariates,
-                has_diabetes,
-                current_smoker,
-                on_htn_meds,
-                on_cholesterol_meds,
-                systolic_bp,
-                cholesterol_diff,
-                hdl_cholesterol,
-                adjusted_age,
-                adjusted_age_squared,
-                egfr,
-                bmi,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        _ => Err("Sex must be either 'male' or 'female'.".to_string()),
-    }
-}
-
+/// 10-year ASCVD risk percentage for one patient.
 #[pyfunction]
-pub fn calculate_10_yr_ascvd_rust(
-    sex: String,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_bp: f64,
-    has_diabetes: bool,
-    current_smoker: bool,
-    bmi: f64,
-    egfr: f64,
-    on_htn_meds: bool,
-    on_cholesterol_meds: bool,
-) -> PyResult<f64> {
-    match calculate_10_yr_ascvd_risk(
-        &sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        current_smoker,
-        bmi,
-        egfr,
-        on_htn_meds,
-        on_cholesterol_meds,
-    ) {
-        Ok(value) => Ok(value),
-        Err(e) => Err(PyValueError::new_err(e)), // Convert Rust String error to Python ValueError
-    }
+pub fn calculate_10_yr_ascvd_rust(sex: &str, risk_factors: RiskFactors) -> PyResult<f64> {
+    calculate_patient_risk(
+        sex,
+        &risk_factors,
+        RiskHorizon::TenYear,
+        select_ascvd_coefficients,
+    )
 }
 
+/// 30-year ASCVD risk percentage for one patient.
 #[pyfunction]
-pub fn calculate_30_yr_ascvd_rust(
-    sex: String,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_bp: f64,
-    has_diabetes: bool,
-    current_smoker: bool,
-    bmi: f64,
-    egfr: f64,
-    on_htn_meds: bool,
-    on_cholesterol_meds: bool,
-) -> PyResult<f64> {
-    match calculate_30_yr_ascvd_risk(
-        &sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        current_smoker,
-        bmi,
-        egfr,
-        on_htn_meds,
-        on_cholesterol_meds,
-    ) {
-        Ok(value) => Ok(value),
-        Err(e) => Err(PyValueError::new_err(e)), // Convert Rust String error to Python ValueError
-    }
+pub fn calculate_30_yr_ascvd_rust(sex: &str, risk_factors: RiskFactors) -> PyResult<f64> {
+    calculate_patient_risk(
+        sex,
+        &risk_factors,
+        RiskHorizon::ThirtyYear,
+        select_ascvd_coefficients,
+    )
 }
 
+/// 10-year ASCVD risk percentages for each row of an `(n, 11)` array.
 #[pyfunction]
 pub fn calculate_10_yr_ascvd_rust_parallel_np(
-    py: Python,
-    data: PyReadonlyArrayDyn<f64>,
+    py: Python<'_>,
+    data: PyReadonlyArrayDyn<'_, f64>,
 ) -> PyResult<Py<PyAny>> {
-    calculate_risk_rust_parallel_np(py, data, calculate_10_yr_ascvd_risk)
+    calculate_batch_risk(py, data, RiskHorizon::TenYear, select_ascvd_coefficients)
 }
 
+/// 30-year ASCVD risk percentages for each row of an `(n, 11)` array.
 #[pyfunction]
 pub fn calculate_30_yr_ascvd_rust_parallel_np(
-    py: Python,
-    data: PyReadonlyArrayDyn<f64>,
+    py: Python<'_>,
+    data: PyReadonlyArrayDyn<'_, f64>,
 ) -> PyResult<Py<PyAny>> {
-    calculate_risk_rust_parallel_np(py, data, calculate_30_yr_ascvd_risk)
+    calculate_batch_risk(py, data, RiskHorizon::ThirtyYear, select_ascvd_coefficients)
 }

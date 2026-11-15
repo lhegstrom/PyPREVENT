@@ -1,230 +1,71 @@
-use crate::covariates::Covariates;
-use crate::utils::{calculate_risk_rust_parallel_np, common_calculation, validate_input};
+//! Heart failure (HF) equations and their Python bindings.
+
+use crate::model_coefficients::{
+    RiskModelCoefficients, FEMALE_10_YR_HF, FEMALE_30_YR_HF, MALE_10_YR_HF, MALE_30_YR_HF,
+};
+use crate::risk_calculation::{calculate_batch_risk, calculate_patient_risk};
+use crate::risk_factors::{RiskFactors, RiskHorizon, Sex};
 use numpy::PyReadonlyArrayDyn;
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use std::f64;
 
-pub fn calculate_10_yr_heart_failure_risk(
-    sex: &str,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_blood_pressure: f64,
-    has_diabetes: bool,
-    is_current_smoker: bool,
-    body_mass_index: f64,
-    estimated_glomerular_filtration_rate: f64,
-    on_hypertension_meds: bool,
-    _cholesterol_treated: bool,
-) -> Result<f64, String> {
-    validate_input(
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_blood_pressure,
-        body_mass_index,
-        estimated_glomerular_filtration_rate,
-        true,
-    )?;
-
-    let cholesterol_difference = total_cholesterol - hdl_cholesterol;
-    let age_factor = (age - 55.0) / 10.0;
-    let age_squared = age_factor.powi(2);
-
-    match sex {
-        value if value.eq_ignore_ascii_case("female") => {
-            let covariates = Covariates::female_10_yr_hf();
-            let calculation = common_calculation(
-                &covariates,
-                has_diabetes,
-                is_current_smoker,
-                on_hypertension_meds,
-                _cholesterol_treated,
-                systolic_blood_pressure,
-                cholesterol_difference,
-                hdl_cholesterol,
-                age_factor,
-                age_squared,
-                estimated_glomerular_filtration_rate,
-                body_mass_index,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        value if value.eq_ignore_ascii_case("male") => {
-            let covariates = Covariates::male_10_yr_hf();
-            let calculation = common_calculation(
-                &covariates,
-                has_diabetes,
-                is_current_smoker,
-                on_hypertension_meds,
-                _cholesterol_treated,
-                systolic_blood_pressure,
-                cholesterol_difference,
-                hdl_cholesterol,
-                age_factor,
-                age_squared,
-                estimated_glomerular_filtration_rate,
-                body_mass_index,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        _ => Err("Sex must be either 'male' or 'female'.".to_string()),
+fn select_heart_failure_coefficients(
+    sex: Sex,
+    horizon: RiskHorizon,
+) -> &'static RiskModelCoefficients {
+    match (sex, horizon) {
+        (Sex::Female, RiskHorizon::TenYear) => &FEMALE_10_YR_HF,
+        (Sex::Male, RiskHorizon::TenYear) => &MALE_10_YR_HF,
+        (Sex::Female, RiskHorizon::ThirtyYear) => &FEMALE_30_YR_HF,
+        (Sex::Male, RiskHorizon::ThirtyYear) => &MALE_30_YR_HF,
     }
 }
 
-pub fn calculate_30_yr_heart_failure_risk(
-    sex: &str,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_bp: f64,
-    diabetes: bool,
-    smoker: bool,
-    bmi: f64,
-    egfr: f64,
-    on_htn_meds: bool,
-    _cholesterol_treated: bool,
-) -> Result<f64, String> {
-    validate_input(
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        bmi,
-        egfr,
-        false,
-    )?;
-
-    let cholesterol_diff = total_cholesterol - hdl_cholesterol;
-    let age_factor = (age - 55.0) / 10.0;
-    let age_factor_squared = age_factor.powi(2);
-
-    match sex {
-        value if value.eq_ignore_ascii_case("female") => {
-            let covariates = Covariates::female_30_yr_hf();
-            let calculation = common_calculation(
-                &covariates,
-                diabetes,
-                smoker,
-                on_htn_meds,
-                _cholesterol_treated,
-                systolic_bp,
-                cholesterol_diff,
-                hdl_cholesterol,
-                age_factor,
-                age_factor_squared,
-                egfr,
-                bmi,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        value if value.eq_ignore_ascii_case("male") => {
-            let covariates = Covariates::male_30_yr_hf();
-            let calculation = common_calculation(
-                &covariates,
-                diabetes,
-                smoker,
-                on_htn_meds,
-                _cholesterol_treated,
-                systolic_bp,
-                cholesterol_diff,
-                hdl_cholesterol,
-                age_factor,
-                age_factor_squared,
-                egfr,
-                bmi,
-            );
-            let odds = calculation.exp();
-            let risk_score = odds / (1.0 + odds) * 100.0;
-            Ok(risk_score)
-        }
-        _ => Err("Sex must be either 'male' or 'female'.".to_string()),
-    }
-}
-
+/// 10-year heart failure risk percentage for one patient.
 #[pyfunction]
-pub fn calculate_10_yr_heart_failure_rust(
-    sex: String,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_bp: f64,
-    has_diabetes: bool,
-    is_smoker: bool,
-    bmi: f64,
-    egfr: f64,
-    on_meds: bool,
-    _cholesterol_treated: bool,
-) -> PyResult<f64> {
-    match calculate_10_yr_heart_failure_risk(
-        &sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        is_smoker,
-        bmi,
-        egfr,
-        on_meds,
-        _cholesterol_treated,
-    ) {
-        Ok(value) => Ok(value),
-        Err(e) => Err(PyValueError::new_err(e)), // Convert Rust String error to Python ValueError
-    }
+pub fn calculate_10_yr_heart_failure_rust(sex: &str, risk_factors: RiskFactors) -> PyResult<f64> {
+    calculate_patient_risk(
+        sex,
+        &risk_factors,
+        RiskHorizon::TenYear,
+        select_heart_failure_coefficients,
+    )
 }
 
+/// 30-year heart failure risk percentage for one patient.
 #[pyfunction]
-pub fn calculate_30_yr_heart_failure_rust(
-    sex: String,
-    age: f64,
-    total_cholesterol: f64,
-    hdl_cholesterol: f64,
-    systolic_bp: f64,
-    has_diabetes: bool,
-    is_smoker: bool,
-    bmi: f64,
-    egfr: f64,
-    on_meds: bool,
-    _cholesterol_treated: bool,
-) -> PyResult<f64> {
-    match calculate_30_yr_heart_failure_risk(
-        &sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        is_smoker,
-        bmi,
-        egfr,
-        on_meds,
-        _cholesterol_treated,
-    ) {
-        Ok(value) => Ok(value),
-        Err(e) => Err(PyValueError::new_err(e)), // Convert Rust String error to Python ValueError
-    }
+pub fn calculate_30_yr_heart_failure_rust(sex: &str, risk_factors: RiskFactors) -> PyResult<f64> {
+    calculate_patient_risk(
+        sex,
+        &risk_factors,
+        RiskHorizon::ThirtyYear,
+        select_heart_failure_coefficients,
+    )
 }
 
+/// 10-year heart failure risk percentages for each row of an `(n, 11)` array.
 #[pyfunction]
 pub fn calculate_10_yr_hf_rust_parallel_np(
-    py: Python,
-    data: PyReadonlyArrayDyn<f64>,
+    py: Python<'_>,
+    data: PyReadonlyArrayDyn<'_, f64>,
 ) -> PyResult<Py<PyAny>> {
-    calculate_risk_rust_parallel_np(py, data, calculate_10_yr_heart_failure_risk)
+    calculate_batch_risk(
+        py,
+        data,
+        RiskHorizon::TenYear,
+        select_heart_failure_coefficients,
+    )
 }
 
+/// 30-year heart failure risk percentages for each row of an `(n, 11)` array.
 #[pyfunction]
 pub fn calculate_30_yr_hf_rust_parallel_np(
-    py: Python,
-    data: PyReadonlyArrayDyn<f64>,
+    py: Python<'_>,
+    data: PyReadonlyArrayDyn<'_, f64>,
 ) -> PyResult<Py<PyAny>> {
-    calculate_risk_rust_parallel_np(py, data, calculate_30_yr_heart_failure_risk)
+    calculate_batch_risk(
+        py,
+        data,
+        RiskHorizon::ThirtyYear,
+        select_heart_failure_coefficients,
+    )
 }

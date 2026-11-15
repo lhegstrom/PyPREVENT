@@ -47,7 +47,7 @@ platform below runs the same Python 3.10 to 3.15 matrix. This creates **24 wheel
 Each wheel job:
 1. Builds the wheel with Rust 1.92.0 and Maturin 1.16.0, using the committed `Cargo.lock`.
 2. Installs the wheel with its test extras.
-3. Runs the tests outside the checkout. The suite has 315 tests.
+3. Runs the tests outside the checkout. The suite has 328 tests.
 4. Runs `pip-audit` on the installed dependencies.
 5. Uploads the wheel as an artifact.
 
@@ -108,15 +108,40 @@ pyprevent.calculate_30_yr_ascvd_risk(
 This is a mixed [Rust](https://www.rust-lang.org/) and Python module.
 
 Rust implements the numerical equations and parallel batch computation. Python
-provides the public API and pandas DataFrame conversion; Maturin compiles and
-packages the extension.
+provides the public API and pandas DataFrame conversion. Maturin compiles and
+packages the extension as `pyprevent._pyprevent`.
 
-The rust source code is located in the /src directory.
-The individual functions are written in their respective files, and registered to the pyprevent._pyprevent Python module within the lib.rs file.
+```
+src/                        Rust extension
+├── lib.rs                  Registers the Python functions
+├── ascvd.rs, cvd.rs,       One file per outcome: picks the coefficients for a
+│   heart_failure.rs        sex and horizon, and defines the Python bindings
+├── risk_factors.rs         Sex, RiskHorizon, and RiskFactors types, with input validation
+├── risk_equation.rs        The shared PREVENT log-odds equation
+├── risk_calculation.rs     Runs an outcome for one patient or a NumPy batch
+├── model_coefficients.rs   Published coefficients for each sex, outcome, and horizon
+└── config.rs               Valid input ranges and the batch array layout
+pyprevent/                  Python package
+├── ascvd_calc.py, cvd.py,  Public scalar and batch functions for each outcome
+│   heart_failure.py
+├── batch_preparation.py    Converts a DataFrame to the native batch array
+├── config.py               Batch column order and warning text
+└── _pyprevent.pyi          Type stub for the Rust extension
+tests/                      pytest and Hypothesis tests
+benchmarks/batch.py         Batch performance benchmark for an installed wheel
+docs/audit/                 Dependency audit scripts and recorded results
+```
 
-The python source is located in the /pyprevent directory.
+Each outcome module passes one `risk_factors` mapping to Rust. Rust reads it into a
+typed `RiskFactors` struct, so a missing or misspelled key raises an error instead of
+moving a value to the wrong input.
 
-Unit tests are in `tests/` and use pytest and Hypothesis.
+Rust unit tests are in `src/risk_factors.rs`. To run them on macOS, add the linker flag
+that Maturin adds for extension modules:
+
+```bash
+RUSTFLAGS="-C link-arg=-undefined -C link-arg=dynamic_lookup" cargo test
+```
 
 
 [^1]: Khan SS, Matsushita K, Sang Y, et al. Development and Validation of the American Heart Association Predicting Risk of Cardiovascular Disease EVENTs (PREVENTTM) Equations. Circulation 2023. DOI: [10.1161/CIRCULATIONAHA.123.067626](https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.123.067626)

@@ -1,7 +1,9 @@
+from typing import Any
+
 from hypothesis import strategies as st
 
 # The below patient was entered into the PREVENT web app, and had these values returned
-TEST_PATIENT: dict = {
+TEST_PATIENT: dict[str, Any] = {
     "sex": "female",
     "age": 33.94837059452007,
     "total_cholesterol": 130.0,
@@ -20,6 +22,33 @@ TEST_PATIENT: dict = {
     "10_yr_hf_expected": 2.7,
     "30_yr_hf_expected": 15.8,
 }
+TEST_PATIENT_INPUTS: dict[str, Any] = {
+    name: value
+    for name, value in TEST_PATIENT.items()
+    if not name.endswith("_expected")
+}
+
+BASELINE_PATIENT: dict[str, Any] = {
+    "sex": "female",
+    "age": 40,
+    "total_cholesterol": 200,
+    "hdl_cholesterol": 50,
+    "systolic_bp": 120,
+    "has_diabetes": True,
+    "current_smoker": True,
+    "bmi": 25,
+    "egfr": 70,
+    "on_htn_meds": True,
+    "on_cholesterol_meds": True,
+}
+
+
+def build_patient(**overrides: Any) -> dict[str, Any]:
+    """Return the baseline patient's keyword arguments with some values replaced."""
+    unknown_names = overrides.keys() - BASELINE_PATIENT.keys()
+    assert not unknown_names, f"Unknown patient fields: {sorted(unknown_names)}"
+    return {**BASELINE_PATIENT, **overrides}
+
 
 sex_strategy = st.sampled_from(["male", "female"])
 age_strategy_10_yr = st.floats(min_value=30.0, max_value=79.0)
@@ -32,11 +61,13 @@ bmi_strategy = st.floats(min_value=18.5, max_value=39.9)
 egfr_strategy = st.floats(min_value=15.0, max_value=140.0)
 
 
-@st.composite
-def generate_10_yr_test_case(draw):
+def draw_valid_patient(
+    draw: st.DrawFn, age_strategy: st.SearchStrategy[float]
+) -> dict[str, Any]:
+    """Draw one in-range patient, with age limited by the equation horizon."""
     return {
         "sex": draw(sex_strategy),
-        "age": draw(age_strategy_10_yr),
+        "age": draw(age_strategy),
         "total_cholesterol": draw(total_cholesterol_strategy),
         "hdl_cholesterol": draw(hdl_cholesterol_strategy),
         "systolic_bp": draw(systolic_bp_strategy),
@@ -50,17 +81,10 @@ def generate_10_yr_test_case(draw):
 
 
 @st.composite
-def generate_30_yr_test_case(draw):
-    return {
-        "sex": draw(sex_strategy),
-        "age": draw(age_strategy_30_yr),
-        "total_cholesterol": draw(total_cholesterol_strategy),
-        "hdl_cholesterol": draw(hdl_cholesterol_strategy),
-        "systolic_bp": draw(systolic_bp_strategy),
-        "has_diabetes": draw(boolean_strategy),
-        "current_smoker": draw(boolean_strategy),
-        "bmi": draw(bmi_strategy),
-        "egfr": draw(egfr_strategy),
-        "on_htn_meds": draw(boolean_strategy),
-        "on_cholesterol_meds": draw(boolean_strategy),
-    }
+def generate_10_yr_test_case(draw: st.DrawFn) -> dict[str, Any]:
+    return draw_valid_patient(draw=draw, age_strategy=age_strategy_10_yr)
+
+
+@st.composite
+def generate_30_yr_test_case(draw: st.DrawFn) -> dict[str, Any]:
+    return draw_valid_patient(draw=draw, age_strategy=age_strategy_30_yr)

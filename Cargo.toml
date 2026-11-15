@@ -1,10 +1,7 @@
 [package]
-name = "pyprevent"               # Your package name
-version = "0.1.7"            # The current version of your package
-edition = "2021"             # The Rust edition to use
-autobins = false
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+name = "pyprevent"
+version = "0.1.7"
+edition = "2021"
 
 [dependencies.pyo3]
 version = "0.30.1"
@@ -15,13 +12,6 @@ numpy = "0.30"
 rayon = "1.11"
 
 [lib]
-name = "pyprevent"               # The name of the library
+name = "pyprevent"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
-
-
-
-# Uncomment the following lines if you have a binary to build along with the library
-# [[bin]]
-# name = "your_binary_name"
-# path = "src/main.rs"

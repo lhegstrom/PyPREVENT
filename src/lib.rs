@@ -1,13 +1,18 @@
+//! Native PREVENT equations, exposed to Python as `pyprevent._pyprevent`.
+
 use ascvd::*;
 use cvd::*;
 use heart_failure::*;
 use pyo3::prelude::*;
 
 mod ascvd;
-mod covariates;
+mod config;
 mod cvd;
 mod heart_failure;
-mod utils;
+mod model_coefficients;
+mod risk_calculation;
+mod risk_equation;
+mod risk_factors;
 
 #[pymodule]
 fn _pyprevent(m: &Bound<'_, PyModule>) -> PyResult<()> {

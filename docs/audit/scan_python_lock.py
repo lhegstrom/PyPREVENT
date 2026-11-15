@@ -11,38 +11,62 @@ import re
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
+
+# ============================================================
+# Audit Settings
+# ============================================================
+PYPI_RELEASE_URL_TEMPLATE = "https://pypi.org/pypi/{name}/{version}/json"
+REQUEST_TIMEOUT_SECONDS = 60
+PARALLEL_REQUEST_COUNT = 8
+PINNED_REQUIREMENT_PATTERN = re.compile(r"^([\w.-]+)==([^\s;\\]+)", re.MULTILINE)
 
 
-def query(package):
-    name, version = package
+def fetch_advisories_for_pinned_package(
+    pinned_package: tuple[str, str],
+) -> dict[str, Any]:
+    """Return the non-withdrawn PyPI advisories for one package version."""
+    name, version = pinned_package
     with urllib.request.urlopen(
-        f"https://pypi.org/pypi/{name}/{version}/json", timeout=60
+        PYPI_RELEASE_URL_TEMPLATE.format(name=name, version=version),
+        timeout=REQUEST_TIMEOUT_SECONDS,
     ) as response:
-        record = json.load(response)
+        release_record = json.load(response)
     return {
         "name": name,
         "version": version,
         "vulns": [
-            v for v in record.get("vulnerabilities", []) if not v.get("withdrawn")
+            advisory
+            for advisory in release_record.get("vulnerabilities", [])
+            if not advisory.get("withdrawn")
         ],
     }
 
 
-if __name__ == "__main__":
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--lock", type=Path, default=Path("requirements-audit.txt"))
     parser.add_argument("--output", type=Path, required=True)
-    args = parser.parse_args()
-    packages = sorted(
-        set(re.findall(r"^([\w.-]+)==([^\s;\\]+)", args.lock.read_text(), re.MULTILINE))
+    arguments = parser.parse_args()
+    pinned_packages = sorted(
+        set(PINNED_REQUIREMENT_PATTERN.findall(arguments.lock.read_text()))
     )
-    if not packages:
+    if not pinned_packages:
         raise SystemExit("No pinned package versions found")
-    with ThreadPoolExecutor(max_workers=8) as pool:
-        records = list(pool.map(query, packages))
-    args.output.write_text(json.dumps({"dependencies": records}, indent=2) + "\n")
-    affected = [p for p in records if p["vulns"]]
-    print(
-        f"Checked {len(records)} package/version pairs across all lockfile markers; {len(affected)} affected"
+    with ThreadPoolExecutor(max_workers=PARALLEL_REQUEST_COUNT) as pool:
+        advisory_records = list(
+            pool.map(fetch_advisories_for_pinned_package, pinned_packages)
+        )
+    arguments.output.write_text(
+        json.dumps({"dependencies": advisory_records}, indent=2) + "\n"
     )
-    raise SystemExit(bool(affected))
+    affected_records = [record for record in advisory_records if record["vulns"]]
+    print(
+        f"Checked {len(advisory_records)} package/version pairs across all lockfile markers;"
+        f" {len(affected_records)} affected"
+    )
+    raise SystemExit(bool(affected_records))
+
+
+if __name__ == "__main__":
+    main()
