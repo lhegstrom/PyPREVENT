@@ -1,0 +1,63 @@
+{
+  "python": "3.12.3",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "numpy": "1.26.4",
+  "pandas": "2.2.3",
+  "package": "/private/tmp/pyprevent-upgrade-env/lib/python3.12/site-packages/pyprevent/__init__.py",
+  "rayon_threads": "1",
+  "repeats": 7,
+  "measurements": [
+    {
+      "rows": 1,
+      "conversion_ms": 0.22070901468396187,
+      "native_ms": 0.000416068360209465,
+      "strided_ms": 0.000500003807246685,
+      "invalid_ms": 0.00037497375160455704,
+      "end_to_end_ms": 0.22008304949849844,
+      "two_calls_sequential_ms": 0.000708969309926033,
+      "two_calls_threaded_ms": 0.028499984182417393
+    },
+    {
+      "rows": 10,
+      "conversion_ms": 0.2235410502180457,
+      "native_ms": 0.000708969309926033,
+      "strided_ms": 0.0009159557521343231,
+      "invalid_ms": 0.0007080379873514175,
+      "end_to_end_ms": 0.22108294069766998,
+      "two_calls_sequential_ms": 0.001374981366097927,
+      "two_calls_threaded_ms": 0.030583003535866737
+    },
+    {
+      "rows": 1000,
+      "conversion_ms": 0.3144999500364065,
+      "native_ms": 0.04837499000132084,
+      "strided_ms": 0.05216698627918959,
+      "invalid_ms": 0.04850002005696297,
+      "end_to_end_ms": 0.37179095670580864,
+      "two_calls_sequential_ms": 0.0962080666795373,
+      "two_calls_threaded_ms": 0.11829205323010683
+    },
+    {
+      "rows": 100000,
+      "conversion_ms": 9.156333049759269,
+      "native_ms": 3.6777909845113754,
+      "strided_ms": 4.523292067460716,
+      "invalid_ms": 3.683999995701015,
+      "end_to_end_ms": 12.700167018920183,
+      "two_calls_sequential_ms": 7.165125105530024,
+      "two_calls_threaded_ms": 7.365833967924118
+    },
+    {
+      "rows": 1000000,
+      "conversion_ms": 107.83533402718604,
+      "native_ms": 37.08962502423674,
+      "strided_ms": 44.20045902952552,
+      "invalid_ms": 37.77691593859345,
+      "end_to_end_ms": 148.06183299515396,
+      "two_calls_sequential_ms": 75.13200002722442,
+      "two_calls_threaded_ms": 72.25145900156349
+    }
+  ],
+  "process_peak_rss_mib": 731.4375,
+  "max_absolute_error_percentage_points": 2.842170943040401e-14
+}

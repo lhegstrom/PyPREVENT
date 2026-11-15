@@ -1,159 +1,156 @@
-name: Build Wheels
+name: Build and test distributions
 
 on:
   push:
-  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build-windows-wheels:
-    name: Build wheels on ${{ matrix.os }} for Python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - windows-latest
-          - windows-2022
-          - windows-2019
-        python-version:
-          - "3.10"
-          - "3.11"
-          - "3.12"
-          - "3.13"
-          - "3.14"
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Create virtual environment
-        shell: powershell
-        run: |
-          python -m venv venv
-
-      - name: Install dependencies
-        shell: powershell
-        run: |
-          .\venv\Scripts\python.exe -m pip install --upgrade pip
-          .\venv\Scripts\python.exe -m pip install -r requirements.txt
-          .\venv\Scripts\python.exe -m pip install maturin twine
-
-      - name: Build Windows wheel
-        shell: powershell
-        run: |
-          .\venv\Scripts\maturin.exe build `
-            --release `
-            --strip `
-            --out dist
-
-      - name: List built wheels
-        shell: powershell
-        run: |
-          Get-ChildItem -Path dist
-
-      - name: Publish Windows wheel to PyPI
-        shell: powershell
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          .\venv\Scripts\twine.exe upload --skip-existing dist/*
-
-
-  build-linux:
-    name: Build Linux wheel for ${{ matrix.python-version }}
+  source:
+    name: Verify source is on main
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - name: Require the selected commit to belong to main
+        run: git merge-base --is-ancestor HEAD origin/main
 
+  wheels:
+    needs: source
+    name: ${{ matrix.platform.name }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-          - cp39-cp39
-          - cp310-cp310
-          - cp311-cp311
-          - cp312-cp312
-          - cp313-cp313
-          - cp314-cp314
-
+        platform:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            architecture: x64
+          - name: windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            architecture: x64
+          - name: macos-arm64
+            os: macos-15
+            target: aarch64-apple-darwin
+            architecture: arm64
+          - name: macos-x86_64
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            architecture: x64
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Show repository contents
-        run: |
-          pwd
-          ls -la
-          test -f Cargo.toml
-          test -f pyproject.toml
-
-      - name: Start manylinux container
-        run: |
-          docker run -d \
-            --name manylinux \
-            -v "${{ github.workspace }}:/PyPrevent" \
-            quay.io/pypa/manylinux2014_x86_64 \
-            tail -f /dev/null
-
-      - name: Install Rust in container
-        run: |
-          docker exec manylinux bash -c \
-            "curl --proto '=https' \
-            --tlsv1.2 \
-            -sSf https://sh.rustup.rs \
-            | sh -s -- -y"
-
-      - name: Verify project and Python
-        run: |
-          docker exec manylinux bash -c "\
-            echo 'Project directory:' && \
-            ls -la /PyPrevent && \
-            echo 'Cargo.toml:' && \
-            ls -la /PyPrevent/Cargo.toml && \
-            echo 'pyproject.toml:' && \
-            ls -la /PyPrevent/pyproject.toml && \
-            echo 'Python:' && \
-            /opt/python/${{ matrix.python-version }}/bin/python --version"
-
-      - name: Install maturin and build Linux wheel
-        run: |
-          docker exec manylinux bash -c "\
-            source \$HOME/.cargo/env && \
-            cd /PyPrevent && \
-            /opt/python/${{ matrix.python-version }}/bin/python -m pip install --upgrade pip && \
-            /opt/python/${{ matrix.python-version }}/bin/python -m pip install maturin && \
-            /opt/python/${{ matrix.python-version }}/bin/python -m maturin build \
-              --release \
-              --manylinux 2014 \
-              --interpreter /opt/python/${{ matrix.python-version }}/bin/python \
-              --out /PyPrevent/dist"
-
-      - name: List built wheels
-        run: |
-          ls -lah dist
-
-      - name: Install Twine
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.platform.architecture }}
+      - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1
+        with:
+          command: build
+          target: ${{ matrix.platform.target }}
+          args: --release --locked --out dist --interpreter ${{ runner.os == 'Linux' && format('python{0}', matrix.python) || 'python' }}
+          manylinux: ${{ runner.os == 'Linux' && '2014' || 'off' }}
+          maturin-version: v1.16.0
+          rust-toolchain: '1.92.0'
+      - name: Install built wheel and tests
+        shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install twine
+          python -c 'import pathlib, subprocess, sys; wheel = next(pathlib.Path("dist").glob("*.whl")); subprocess.check_call([sys.executable, "-m", "pip", "install", str(wheel) + "[test]"])'
+      - name: Test installed wheel outside source directory
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        run: python -m pytest "$GITHUB_WORKSPACE/tests" -c "$GITHUB_WORKSPACE/pyproject.toml"
+      - name: Audit installed runtime and test environment
+        run: |
+          python -m pip install pip-audit
+          pip-audit
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: wheel-${{ matrix.platform.name }}-${{ matrix.python }}
+          path: dist/*.whl
+          if-no-files-found: error
 
-      - name: Publish Linux wheel to PyPI
+  sdist:
+    needs: source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        run: python -m pip install -r requirements-build.txt
+      - name: Build and validate source distribution
+        run: |
+          maturin sdist --out dist
+          python -m twine check dist/*
+          python -m pip wheel --no-deps dist/*.tar.gz --wheel-dir rebuilt
+          python -c 'import pathlib, subprocess, sys; wheel = next(pathlib.Path("rebuilt").glob("*.whl")); subprocess.check_call([sys.executable, "-m", "pip", "install", str(wheel) + "[test]"])'
+      - name: Test wheel rebuilt from source distribution
+        working-directory: ${{ runner.temp }}
+        run: python -m pytest "$GITHUB_WORKSPACE/tests" -c "$GITHUB_WORKSPACE/pyproject.toml"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  audit:
+    needs: source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Audit Python runtime, test, and notebook dependencies
+        run: |
+          python -m pip install pip-audit
+          pip-audit -r requirements-audit.txt --require-hashes --disable-pip
+          python docs/audit/scan_python_lock.py --output /tmp/python-all-platforms.json
+      - name: Audit Rust dependencies
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit --deny warnings
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+  publish:
+    if: github.event_name == 'release' && github.event.action == 'published'
+    needs: [wheels, sdist, audit]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Require release tag to match package version
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          python -m twine upload --skip-existing dist/*
-
-      - name: Stop manylinux container
-        if: always()
-        run: |
-          docker rm -f manylinux || true
+          python - <<'PY'
+          import os, tomllib
+          from pathlib import Path
+          version = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
+          assert tomllib.loads(Path('Cargo.toml').read_text())['package']['version'] == version
+          assert os.environ['RELEASE_TAG'] == f'v{version}', 'Release tag must match package version'
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1

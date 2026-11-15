@@ -1,15 +1,36 @@
 [build-system]
-requires = ["maturin>=1.0,<2.0"]
+requires = ["maturin>=1.10,<2.0"]
 build-backend = "maturin"
 
 [project]
 name = "pyprevent"
-version = "0.1.6"
+version = "0.1.7"
 authors = [{email = "l.r.hegstrom@gmail.com"}]
 description = "Python implementation of 2024 AHA PREVENT calculator"
 readme = "README.md"
 license = {file = "LICENSE.txt"}
-repository = "https://github.com/lhegstrom/PyPrevent/"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Programming Language :: Rust",
+]
+dependencies = ["numpy>=1.26.4,<3", "pandas>=2.2.3,<4"]
+
+[project.optional-dependencies]
+test = ["pytest>=8.3,<10", "hypothesis>=6.120,<7"]
+notebook = [
+    "jupyterlab>=4.6.4,<5; python_full_version >= '3.11.5'",
+    "jupyter-black>=0.4; python_full_version >= '3.11.5'",
+    "black>=26.10.1; python_full_version >= '3.11.5'",
+    # Security floors for notebook transitive dependencies.
+    "tornado>=6.6.1; python_full_version >= '3.11.5'",
+    "soupsieve>=4.0; python_full_version >= '3.11.5'",
+]
 
 [project.urls]
 Source = "https://github.com/lhegstrom/PyPrevent/"
@@ -17,7 +38,9 @@ Tracker = "https://github.com/lhegstrom/PyPrevent/issues"
 
 [tool.maturin]
 module-name = "pyprevent._pyprevent"
-compatibility = "linux"
+python-source = "."
+include = [{path = "tests/**", format = "sdist"}]
 
 [tool.pytest.ini_options]
-testpaths = ["PyPrevent/tests"]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"

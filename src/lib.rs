@@ -10,7 +10,7 @@ mod heart_failure;
 mod utils;
 
 #[pymodule]
-fn _pyprevent(_py: Python, m: &PyModule) -> PyResult<()> {
+fn _pyprevent(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // single patients
     m.add_function(wrap_pyfunction!(calculate_10_yr_heart_failure_rust, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_30_yr_heart_failure_rust, m)?)?;

@@ -186,7 +186,10 @@ def batch_calculate_10_yr_heart_failure_risk(
     np.ndarray: A numpy array of estimated 10-year HF risk percentages for each individual in the DataFrame.
 
     Raises:
-    ValueError: If any of the input parameters are outside their valid ranges or if the specified columns are not found in the DataFrame.
+    ValueError: If required columns are missing or column labels are duplicated.
+    TypeError: If an unknown column mapping is supplied.
+
+    Invalid rows produce NaN and a summary warning instead of a score.
 
     Example:
     >>> df = pd.DataFrame({...})
@@ -277,7 +280,10 @@ def batch_calculate_30_yr_heart_failure_risk(
     np.ndarray: A numpy array of estimated 30-year HF risk percentages for each individual in the DataFrame.
 
     Raises:
-    ValueError: If any of the input parameters are outside their valid ranges or if the specified columns are not found in the DataFrame.
+    ValueError: If required columns are missing or column labels are duplicated.
+    TypeError: If an unknown column mapping is supplied.
+
+    Invalid rows produce NaN and a summary warning instead of a score.
 
     Example:
     >>> df = pd.DataFrame({...})

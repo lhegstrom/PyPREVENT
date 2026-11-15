@@ -1,17 +1,18 @@
 [package]
 name = "pyprevent"               # Your package name
-version = "0.1.6"            # The current version of your package
+version = "0.1.7"            # The current version of your package
 edition = "2021"             # The Rust edition to use
+autobins = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.pyo3]
-version = "0.20.2"
+version = "0.30.1"
 features = ["extension-module"]
 
 [dependencies]
-numpy = "0.20"
-rayon = "1.8.1"
+numpy = "0.30"
+rayon = "1.11"
 
 [lib]
 name = "pyprevent"               # The name of the library
