@@ -1,8 +1,10 @@
+"""Atherosclerotic cardiovascular disease (ASCVD) risk for one patient or a DataFrame."""
+
 import numpy as np
 import pandas as pd
-from pyprevent import _pyprevent
 
-from .utils import _prepare_df_for_batch, _report_any_null_values
+from . import _pyprevent
+from .batch_preparation import _build_native_batch_array, _report_invalid_row_count
 
 
 def calculate_10_yr_ascvd_risk(
@@ -61,17 +63,19 @@ def calculate_10_yr_ascvd_risk(
     # Returns: Estimated 10-year ASCVD risk percentage (e.g., 12.3)
     """
     return _pyprevent.calculate_10_yr_ascvd_rust(
-        sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        current_smoker,
-        bmi,
-        egfr,
-        on_htn_meds,
-        on_cholesterol_meds,
+        sex=sex,
+        risk_factors={
+            "age": age,
+            "total_cholesterol": total_cholesterol,
+            "hdl_cholesterol": hdl_cholesterol,
+            "systolic_bp": systolic_bp,
+            "has_diabetes": has_diabetes,
+            "current_smoker": current_smoker,
+            "bmi": bmi,
+            "egfr": egfr,
+            "on_htn_meds": on_htn_meds,
+            "on_cholesterol_meds": on_cholesterol_meds,
+        },
     )
 
 
@@ -131,17 +135,19 @@ def calculate_30_yr_ascvd_risk(
     # Returns: Estimated 30-year ASCVD risk percentage (e.g., 12.3)
     """
     return _pyprevent.calculate_30_yr_ascvd_rust(
-        sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        current_smoker,
-        bmi,
-        egfr,
-        on_htn_meds,
-        on_cholesterol_meds,
+        sex=sex,
+        risk_factors={
+            "age": age,
+            "total_cholesterol": total_cholesterol,
+            "hdl_cholesterol": hdl_cholesterol,
+            "systolic_bp": systolic_bp,
+            "has_diabetes": has_diabetes,
+            "current_smoker": current_smoker,
+            "bmi": bmi,
+            "egfr": egfr,
+            "on_htn_meds": on_htn_meds,
+            "on_cholesterol_meds": on_cholesterol_meds,
+        },
     )
 
 
@@ -158,10 +164,10 @@ def batch_calculate_10_yr_ascvd_risk(
     egfr: str = "egfr",
     on_htn_meds: str = "on_htn_meds",
     on_cholesterol_meds: str = "on_cholesterol_meds",
-    **kwargs,
+    **unexpected_column_mappings: str,
 ) -> np.ndarray:
     """
-     Batch calculate the 10-year risk of atherosclerotic cardiovascular disease (ASCVD) for a dataset.
+    Batch calculate the 10-year risk of atherosclerotic cardiovascular disease (ASCVD) for a dataset.
 
     This function processes a DataFrame with health and lifestyle parameters to estimate
     the 10-year ASCVD risk for each individual in the dataset. The input values must fall
@@ -180,10 +186,10 @@ def batch_calculate_10_yr_ascvd_risk(
     - egfr (str): Column name for the estimated glomerular filtration rate (mL/min/1.73 m^2). Must be between 15 and 140. Default 'egfr'.
     - on_htn_meds (str): Column name indicating if the individual is on hypertension medication (True or False). Default 'on_htn_meds'.
     - on_cholesterol_meds (str): Column name indicating if the individual is on cholesterol-lowering medication (True or False). Default 'on_cholesterol_meds'.
-    - **kwargs: Optional keyword arguments for custom column mappings.
+    - **unexpected_column_mappings: Any other keyword raises TypeError.
 
     Returns:
-    numpy.ndarray: A numpy array of estimated 10-year ASCVD risk percentages for each individual in the DataFrame.
+    numpy.ndarray: The estimated 10-year ASCVD risk percentage for each row, in input order.
 
     Raises:
     ValueError: If required columns are missing or column labels are duplicated.
@@ -195,9 +201,9 @@ def batch_calculate_10_yr_ascvd_risk(
     >>> df = pd.DataFrame({...})
     >>> risks = batch_calculate_10_yr_ascvd_risk(df, sex='gender', age='patient_age', ...)
     >>> print(risks)
-    # Returns: A np.array of estimated 10-year ASCVD risk percentages
+    # Returns: A numpy array of estimated 10-year ASCVD risk percentages
 
-    Alternatively, can pass in a dictionary of column mappings
+    Alternatively, pass a dictionary of column mappings:
     >>> df = pd.DataFrame({...})
     >>> column_mappings = {
     ...     'sex': 'gender_column',
@@ -213,30 +219,28 @@ def batch_calculate_10_yr_ascvd_risk(
     ...     'on_cholesterol_meds': 'cholesterol_meds'
     ... }
     >>> risks = batch_calculate_10_yr_ascvd_risk(df, **column_mappings)
-    # Returns: A np.array of estimated 10-year ASCVD risk percentages
+    # Returns: A numpy array of estimated 10-year ASCVD risk percentages
     """
-
-    data = _prepare_df_for_batch(
-        df,
-        sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        current_smoker,
-        bmi,
-        egfr,
-        on_htn_meds,
-        on_cholesterol_meds,
-        **kwargs,
+    native_batch_array = _build_native_batch_array(
+        df=df,
+        sex=sex,
+        age=age,
+        total_cholesterol=total_cholesterol,
+        hdl_cholesterol=hdl_cholesterol,
+        systolic_bp=systolic_bp,
+        has_diabetes=has_diabetes,
+        current_smoker=current_smoker,
+        bmi=bmi,
+        egfr=egfr,
+        on_htn_meds=on_htn_meds,
+        on_cholesterol_meds=on_cholesterol_meds,
+        **unexpected_column_mappings,
     )
-
-    # Calculate ASCVD risk for each row
-    result = _pyprevent.calculate_10_yr_ascvd_rust_parallel_np(data=data)
-    _report_any_null_values(result)
-
-    return result
+    risk_percentages = _pyprevent.calculate_10_yr_ascvd_rust_parallel_np(
+        data=native_batch_array
+    )
+    _report_invalid_row_count(risk_percentages=risk_percentages)
+    return risk_percentages
 
 
 def batch_calculate_30_yr_ascvd_risk(
@@ -252,7 +256,7 @@ def batch_calculate_30_yr_ascvd_risk(
     egfr: str = "egfr",
     on_htn_meds: str = "on_htn_meds",
     on_cholesterol_meds: str = "on_cholesterol_meds",
-    **kwargs,
+    **unexpected_column_mappings: str,
 ) -> np.ndarray:
     """
     Batch calculate the 30-year risk of atherosclerotic cardiovascular disease (ASCVD) for a dataset.
@@ -274,10 +278,10 @@ def batch_calculate_30_yr_ascvd_risk(
     - egfr (str): Column name for the estimated glomerular filtration rate (mL/min/1.73 m^2). Must be between 15 and 140. Default 'egfr'.
     - on_htn_meds (str): Column name indicating if the individual is on hypertension medication (True or False). Default 'on_htn_meds'.
     - on_cholesterol_meds (str): Column name indicating if the individual is on cholesterol-lowering medication (True or False). Default 'on_cholesterol_meds'.
-    - **kwargs: Optional keyword arguments for custom column mappings.
+    - **unexpected_column_mappings: Any other keyword raises TypeError.
 
     Returns:
-    numpy.ndarray: A list of estimated 30-year ASCVD risk percentages for each individual in the DataFrame.
+    numpy.ndarray: The estimated 30-year ASCVD risk percentage for each row, in input order.
 
     Raises:
     ValueError: If required columns are missing or column labels are duplicated.
@@ -291,7 +295,7 @@ def batch_calculate_30_yr_ascvd_risk(
     >>> print(risks)
     # Returns: A numpy array of estimated 30-year ASCVD risk percentages
 
-    Alternatively, can pass in a dictionary of column mappings
+    Alternatively, pass a dictionary of column mappings:
     >>> df = pd.DataFrame({...})
     >>> column_mappings = {
     ...     'sex': 'gender_column',
@@ -309,25 +313,23 @@ def batch_calculate_30_yr_ascvd_risk(
     >>> risks = batch_calculate_30_yr_ascvd_risk(df, **column_mappings)
     # Returns: A numpy array of estimated 30-year ASCVD risk percentages
     """
-    # Default column names
-    data = _prepare_df_for_batch(
-        df,
-        sex,
-        age,
-        total_cholesterol,
-        hdl_cholesterol,
-        systolic_bp,
-        has_diabetes,
-        current_smoker,
-        bmi,
-        egfr,
-        on_htn_meds,
-        on_cholesterol_meds,
-        **kwargs,
+    native_batch_array = _build_native_batch_array(
+        df=df,
+        sex=sex,
+        age=age,
+        total_cholesterol=total_cholesterol,
+        hdl_cholesterol=hdl_cholesterol,
+        systolic_bp=systolic_bp,
+        has_diabetes=has_diabetes,
+        current_smoker=current_smoker,
+        bmi=bmi,
+        egfr=egfr,
+        on_htn_meds=on_htn_meds,
+        on_cholesterol_meds=on_cholesterol_meds,
+        **unexpected_column_mappings,
     )
-
-    # Calculate ASCVD risk for each row
-    result = _pyprevent.calculate_30_yr_ascvd_rust_parallel_np(data=data)
-    _report_any_null_values(result)
-
-    return result
+    risk_percentages = _pyprevent.calculate_30_yr_ascvd_rust_parallel_np(
+        data=native_batch_array
+    )
+    _report_invalid_row_count(risk_percentages=risk_percentages)
+    return risk_percentages
